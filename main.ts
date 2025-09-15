@@ -145,7 +145,7 @@ function build_card_list () {
     }
 }
 function add_player (player_id: number) {
-    let player_money: number[] = []
+    
     players.push(player_id)
     player_money.push(200)
 }
@@ -160,6 +160,7 @@ function init_constants () {
     GAME_STAGE_WAITING_FOR_GAME_TO_START = 2
     GAME_STAGE_PLAYING = 3
     GAME_STAGE_MY_TURN = 4
+    GAME_STAGE_FINISHED = 5
     ROLE_DEALER = 0
     ROLE_PLAYER = 1
     MSG_PLAYER_START_TURN = 0
@@ -180,23 +181,38 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
     }
     if (game_stage == GAME_STAGE_PLAYING) {
         if (msg_kind == MSG_PLAYER_FINISH_TURN) {
+            let _bet = parseInt(msg_contents)
+            pot += _bet
             basic.showString("Player finished turn")
-            if (parseInt(msg_contents) > highest_bet) {
+            if (_bet > highest_bet) {
                 highest_bet = parseInt(msg_contents)
                 players_left_to_call = players.length
             } else {
-                players_left_to_call += 0 - 1
+                players_left_to_call -=  1
             }
             if (current_player == players.length - 1) {
                 current_player = 0
             } else {
                 current_player += 1
             }
+            
             if (players_left_to_call > 0) {
                 send_message(current_player, MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
-                // last player called, new round should start
-                next_round()
+                //calculate winner here
+                let _winner = 0
+                player_money[_winner] += pot
+                for (let index = 0; index < players.length; index++) {
+                    if (player_money[index] == 0) {
+                        players.removeAt(index);
+                        player_money.removeAt(index)
+                    }
+                }
+                if (players.length == 1) {
+                    basic.showString("Player won")
+                    game_stage = GAME_STAGE_FINISHED
+                }
+
             }
         }
     }
@@ -320,6 +336,7 @@ let card_values: number[] = []
 let card_values_alpha: string[] = []
 let suits: string[] = []
 let GAME_STAGE_PLAYING = 0
+let GAME_STAGE_FINISHED = 0
 let MSG_PLAYER_FINISH_TURN = 0
 let dealer_id = 0
 let _value = ""
@@ -333,6 +350,8 @@ let serial_number = 0
 let money = 0
 let _message2 = ""
 let searching_for_players = 0
+let player_money: number[] = []
+let pot : number = 0
 money = 20
 serial_number = control.deviceSerialNumber()
 init_constants()
