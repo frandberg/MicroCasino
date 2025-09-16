@@ -1,16 +1,15 @@
 {
-    "name": "MicroCasino",
-    "description": "",
+    "name": "microcasino-tree-hampus3",
     "dependencies": {
         "core": "*",
         "radio": "*",
-        "microphone": "*"
+        "microphone": "*",
+        "microcasino": "github:frandberg/microcasino"
     },
     "files": [
         "main.blocks",
         "main.ts",
-        "README.md",
-        "main.py"
+        "README.md"
     ],
     "testFiles": [
         "test.ts"
@@ -22,5 +21,5 @@
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "tsprj"
+    "preferredEditor": "blocksprj"
 }
