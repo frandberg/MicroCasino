@@ -8,10 +8,6 @@ function scramble_cards () {
     _rand = 0
     while (_temp_cards.length != 0) {
         _rand = randint(0, _temp_cards.length - 1)
-        datalogger.log(
-        datalogger.createCV("_rand", _rand),
-        datalogger.createCV("_temp_cards len", _temp_cards.length)
-        )
         _value = _temp_cards[_rand]
         _temp_cards.removeAt(_rand)
         scrambled_cards.push(_value)
