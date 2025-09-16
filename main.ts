@@ -225,7 +225,6 @@ input.onGesture(Gesture.ScreenDown, function () {
 input.onButtonPressed(Button.AB, function () {
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
         if (role == ROLE_DEALER) {
-            datalogger.log(datalogger.createCV("role", role))
             // terminate here,idk how to though
             if (players.length == 0) {
             	
@@ -278,7 +277,6 @@ function msg_recieved_player (sender: number, msg_kind: number, msg_contents: st
 function select_role (selected_role: number) {
     game_stage = GAME_STAGE_FINDING_PLAYERS
     role = selected_role
-    datalogger.log(datalogger.createCV("select_role_role", role))
     led.stopAnimation()
     if (role == ROLE_DEALER) {
         _display_char = "D"
