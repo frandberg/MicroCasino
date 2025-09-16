@@ -145,7 +145,6 @@ function build_card_list () {
     }
 }
 function add_player (player_id: number) {
-    
     players.push(player_id)
     player_money.push(200)
 }
@@ -181,30 +180,28 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
     }
     if (game_stage == GAME_STAGE_PLAYING) {
         if (msg_kind == MSG_PLAYER_FINISH_TURN) {
-            let _bet = parseInt(msg_contents)
+            _bet = parseInt(msg_contents)
             pot += _bet
             basic.showString("Player finished turn")
             if (_bet > highest_bet) {
                 highest_bet = parseInt(msg_contents)
                 players_left_to_call = players.length
             } else {
-                players_left_to_call -=  1
+                players_left_to_call += 0 - 1
             }
             if (current_player == players.length - 1) {
                 current_player = 0
             } else {
                 current_player += 1
             }
-            
+            // calculate winner here
             if (players_left_to_call > 0) {
                 send_message(current_player, MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
-                //calculate winner here
-                let _winner = 0
                 player_money[_winner] += pot
-                for (let index = 0; index < players.length; index++) {
+for (let index = 0; index <= players.length - 1; index++) {
                     if (player_money[index] == 0) {
-                        players.removeAt(index);
+                        players.removeAt(index)
                         player_money.removeAt(index)
                     }
                 }
@@ -212,7 +209,6 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
                     basic.showString("Player won")
                     game_stage = GAME_STAGE_FINISHED
                 }
-
             }
         }
     }
@@ -255,7 +251,7 @@ input.onGesture(Gesture.Shake, function () {
     }
 })
 function add_board_cards (count: number) {
-    for (let index = 0; index <= count; index++) {
+    for (let index2 = 0; index2 <= count; index2++) {
         let board_cards: string[] = []
         board_cards.push(scrambled_cards.pop())
     }
@@ -307,9 +303,11 @@ let round_index = 0
 let _display_char = ""
 let current_player = 0
 let players_left_to_call = 0
+let _bet = 0
 let MSG_PLAYER_JOIN_CONFIRM = 0
 let MSG_SEARCHING_FOR_PLAYERS = 0
 let MSG_PLAYER_START_TURN = 0
+let GAME_STAGE_FINISHED = 0
 let GAME_STAGE_WAITING_FOR_GAME_TO_START = 0
 let i = 0
 let highest_bet = 0
@@ -334,7 +332,6 @@ let card_values: number[] = []
 let card_values_alpha: string[] = []
 let suits: string[] = []
 let GAME_STAGE_PLAYING = 0
-let GAME_STAGE_FINISHED = 0
 let MSG_PLAYER_FINISH_TURN = 0
 let dealer_id = 0
 let _value = ""
@@ -346,13 +343,16 @@ let GAME_STAGE_ROLE_SELECTION = 0
 let game_stage = 0
 let serial_number = 0
 let money = 0
-let _message2 = ""
-let searching_for_players = 0
-let player_money: number[] = []
 let pot : number = 0
+let player_money: number[] = []
+let searching_for_players = 0
+let _message2 = ""
+let _winner = 0
 money = 20
 serial_number = control.deviceSerialNumber()
 init_constants()
+let radio_group_number = 68
+radio.setGroup(radio_group_number)
 game_stage = GAME_STAGE_ROLE_SELECTION
 init_list_values()
 build_card_list()
