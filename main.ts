@@ -1,4 +1,4 @@
-function scramble_cards () {
+function scramble_cards() {
     scrambled_cards = []
     _temp_cards = cards
     _rand = 0
@@ -9,36 +9,36 @@ function scramble_cards () {
         scrambled_cards.push(_value)
     }
 }
-function fold () {
+function fold() {
     send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "-1")
     game_stage = GAME_STAGE_PLAYING
 }
-function init_list_values () {
+function init_list_values() {
     suits = [
-    "H",
-    "D",
-    "C",
-    "S"
+        "H",
+        "D",
+        "C",
+        "S"
     ]
     card_values_alpha = [
-    "J",
-    "Q",
-    "K",
-    "A"
+        "J",
+        "Q",
+        "K",
+        "A"
     ]
     card_values = [
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
     ]
 }
-function get_message_contents (message: string) {
+function get_message_contents(message: string) {
     _delimeters_found_contents = 0
     for (let _k = 0; _k <= message.length - 1; _k++) {
         if (message.charAt(_k) == "|") {
@@ -50,7 +50,7 @@ function get_message_contents (message: string) {
     }
     return ""
 }
-function get_message_kind (message: string) {
+function get_message_kind(message: string) {
     _delimeters_found_kind = 0
     for (let _j = 0; _j <= message.length - 1; _j++) {
         if (message.charAt(_j) == "|") {
@@ -64,8 +64,12 @@ function get_message_kind (message: string) {
     }
     return -1
 }
-function send_message (reciever: number, kind: number, contents: string) {
+function send_message(reciever: number, kind: number, contents: string) {
     _message = "" + reciever + "|" + kind + "|" + contents
+    if (_message.length >= 19) {
+        led.stopAnimation()
+        basic.showString("ERROR, MESSAGE TOO LONG")
+    }
     radio.sendString(_message)
 }
 input.onButtonPressed(Button.A, function () {
@@ -74,12 +78,25 @@ input.onButtonPressed(Button.A, function () {
         game_stage = GAME_STAGE_FINDING_PLAYERS
         while (game_stage == GAME_STAGE_FINDING_PLAYERS) {
             send_message(0, MSG_JOIN_GAME_PING, "")
-            control.waitMicros(1000000)
+            basic.pause(1000)
         }
     } else if (game_stage == GAME_STAGE_MY_TURN) {
         change_bet(-1)
     }
 })
+function checkSuits(suits: number[]) {
+    first_suit = suits[0]
+    index23 = 1
+    same_suits = true
+    while (same_suits == true && index23 < suits.length) {
+        if (first_suit == suits[index23]) {
+            index23 += 1
+        } else {
+            same_suits = false
+        }
+    }
+    return same_suits
+}
 radio.onReceivedString(function (msg) {
     // Dealer receives join requests while finding players
     _reciever = get_message_reciever(msg)
@@ -94,10 +111,15 @@ radio.onReceivedString(function (msg) {
         }
     }
 })
-function deal_cards () {
-	
+function deal_cards() {
+    for (let index = 0; index <= players.length - 1; index++) {
+        
+        player_cards[index][0] = scrambled_cards.pop()
+        player_cards[index][1] = scrambled_cards.pop()
+        send_message(players[index], MSG_GIVE_HAND, "" + player_cards[index][0] + "-" + player_cards[index][1])
+    }
 }
-function get_player_index (player_id: number) {
+function get_player_index(player_id: number) {
     for (let _l = 0; _l <= players.length - 1; _l++) {
         if (players[_l] == player_id) {
             return _l
@@ -105,14 +127,13 @@ function get_player_index (player_id: number) {
     }
     return -1
 }
-function start_game () {
+function start_game() {
     game_stage = GAME_STAGE_PLAYING
     send_message(0, MSG_START_GAME, "")
     led.stopAnimation()
-    basic.showString("!")
-    play_round_dealer()
+    next_round()
 }
-function get_message_reciever (message: string) {
+function get_message_reciever(message: string) {
     for (let _i = 0; _i <= message.length - 1; _i++) {
         if (message.charAt(_i) == "|") {
             return parseInt(message.substr(0, _i))
@@ -120,7 +141,7 @@ function get_message_reciever (message: string) {
     }
     return -1
 }
-function change_bet (amount: number) {
+function change_bet(amount: number) {
     led.stopAnimation()
     if (bet + amount > money) {
         bet = money
@@ -130,7 +151,7 @@ function change_bet (amount: number) {
         bet += amount
     }
 }
-function build_card_list () {
+function build_card_list() {
     cards = []
     i = 0
     for (let suit of suits) {
@@ -144,16 +165,17 @@ function build_card_list () {
         }
     }
 }
-function add_player (player_id: number) {
+function add_player(player_id: number) {
     players.push(player_id)
     player_money.push(200)
+    player_cards.push([])
 }
-function call_bet_raise () {
+function call_bet_raise() {
     // we use the same function for calling, betting and raising
     send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "" + bet + "")
     game_stage = GAME_STAGE_PLAYING
 }
-function init_constants () {
+function init_constants() {
     GAME_STAGE_ROLE_SELECTION = 0
     GAME_STAGE_FINDING_PLAYERS = 1
     GAME_STAGE_WAITING_FOR_GAME_TO_START = 2
@@ -168,21 +190,18 @@ function init_constants () {
     MSG_PLAYER_JOIN_CONFIRM = 3
     MSG_JOIN_GAME_PING = 4
     MSG_START_GAME = 5
+    MSG_GIVE_HAND = 6
 }
-function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: string) {
+function msg_recieved_dealer(sender: number, msg_kind: number, msg_contents: string) {
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
-        basic.showNumber(7)
         if (msg_kind == MSG_PLAYER_JOIN_CONFIRM) {
             add_player(radio.receivedPacket(RadioPacketProperty.SerialNumber))
-            send_message(radio.receivedPacket(RadioPacketProperty.SerialNumber), MSG_PLAYER_JOIN_CONFIRM, "")
-            basic.showNumber(7)
         }
     }
     if (game_stage == GAME_STAGE_PLAYING) {
         if (msg_kind == MSG_PLAYER_FINISH_TURN) {
             _bet = parseInt(msg_contents)
             pot += _bet
-            basic.showString("Player finished turn")
             if (_bet > highest_bet) {
                 highest_bet = parseInt(msg_contents)
                 players_left_to_call = players.length
@@ -199,17 +218,14 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
                 send_message(current_player, MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
                 player_money[_winner] += pot
-for (let index = 0; index <= players.length - 1; index++) {
-                    if (player_money[index] == 0) {
-                        players.removeAt(index)
-                        player_money.removeAt(index)
+                for (let index2 = 0; index2 <= players.length - 1; index2++) {
+                    if (player_money[index2] == 0) {
+                        players.removeAt(index2)
+                        player_money.removeAt(index2)
                     }
                 }
-                if (players.length == 1) {
-                    basic.showString("Player won")
-                    game_stage = GAME_STAGE_FINISHED
-                }
             }
+            next_round()
         }
     }
 }
@@ -219,14 +235,25 @@ input.onGesture(Gesture.ScreenDown, function () {
     }
 })
 input.onButtonPressed(Button.AB, function () {
+    led.stopAnimation()
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
         if (role == ROLE_DEALER) {
             // terminate here,idk how to though
             if (players.length == 0) {
-            	
+
             }
             start_game()
         }
+    }
+    if (role == ROLE_DEALER) {
+        console.log(board_cards.length)
+        for (let card of board_cards) {
+            console.log(card)
+        }
+    }
+    if (role == ROLE_PLAYER) {
+        console.log(my_cards)
+        basic.showString("" + my_cards[0] + my_cards[1])
     }
 })
 input.onButtonPressed(Button.B, function () {
@@ -237,9 +264,8 @@ input.onButtonPressed(Button.B, function () {
         change_bet(1)
     }
 })
-function play_round_dealer () {
+function play_round_dealer() {
     // datalogger.log(datalogger.createCV("play round dealer", 0))
-    deal_cards()
     players_left_to_call = players.length
     current_player = 0
     highest_bet = 0
@@ -250,13 +276,14 @@ input.onGesture(Gesture.Shake, function () {
         call_bet_raise()
     }
 })
-function add_board_cards (count: number) {
-    for (let index2 = 0; index2 <= count; index2++) {
-        let board_cards: string[] = []
-        board_cards.push(scrambled_cards.pop())
+function add_board_cards(count: number) {
+    for (let index = 0; index < count; index++) {
+        _card = scrambled_cards.pop()
+        board_cards.push(_card)
+        console.log(_card)
     }
 }
-function msg_recieved_player (sender: number, msg_kind: number, msg_contents: string) {
+function msg_recieved_player(sender: number, msg_kind: number, msg_contents: string) {
     if (game_stage == GAME_STAGE_FINDING_PLAYERS && msg_kind == MSG_JOIN_GAME_PING) {
         dealer_id = sender
         send_message(0, MSG_PLAYER_JOIN_CONFIRM, "")
@@ -269,8 +296,13 @@ function msg_recieved_player (sender: number, msg_kind: number, msg_contents: st
         highest_bet = parseInt(msg_contents)
         bet = highest_bet
     }
+    if (msg_kind == MSG_GIVE_HAND) {
+        my_cards[0] = msg_contents.substr(0, 2)
+        my_cards[1] = msg_contents.substr(3, 5)
+    }
 }
-function select_role (selected_role: number) {
+
+function select_role(selected_role: number) {
     game_stage = GAME_STAGE_FINDING_PLAYERS
     role = selected_role
     led.stopAnimation()
@@ -283,24 +315,46 @@ function select_role (selected_role: number) {
     }
     basic.showString(_display_char)
 }
-function next_round () {
-    round_index += 1
-    // first three cards
-    // fourth card
-    // fifth card
-    if (round_index == 1) {
-    	
+function next_round() {
+    players_left_to_call = players.length
+    current_player = 0
+    highest_bet = 0
+    console.log("next round index: " + round_index)
+    if (round_index == 0) {
+        deal_cards()
+        round_index += 1
+    } else if (round_index == 1) {
+        add_board_cards(3)
+        round_index += 1
     } else if (round_index == 2) {
-    	
+        add_board_cards(1)
+        round_index += 1
     } else if (round_index == 3) {
-    	
+        add_board_cards(1)
+        round_index += 1
     } else {
         // pay out jackpot
         round_index = 0
+        // basic.showString("Player won")
+        // game_stage = GAME_STAGE_FINISHED
+        if (players.length == 1) {
+
+        }
     }
+    send_message(players[0], MSG_PLAYER_START_TURN, "" + current_player)
 }
-let round_index = 0
+let row = 0
+let current = 0
+let next = 0
+let spare_card = 0
+let spare_value = 0
+let g = 0
 let _display_char = ""
+let straight = 0
+let v_result = 0
+let flush = false
+let value = ""
+let _card = ""
 let current_player = 0
 let players_left_to_call = 0
 let _bet = 0
@@ -313,13 +367,19 @@ let i = 0
 let highest_bet = 0
 let bet = 0
 let MSG_START_GAME = 0
+let MSG_GIVE_HAND = 0
+let player_cards: string[][] = []
+let _card_2 = ""
+let _card_1 = ""
 let players: number[] = []
 let ROLE_PLAYER = 0
-let role = 0
 let _contents = ""
 let _kind = 0
 let _sender = 0
 let _reciever = 0
+let same_suits = false
+let index23 = 0
+let first_suit = 0
 let MSG_JOIN_GAME_PING = 0
 let GAME_STAGE_FINDING_PLAYERS = 0
 let ROLE_DEALER = 0
@@ -343,11 +403,18 @@ let GAME_STAGE_ROLE_SELECTION = 0
 let game_stage = 0
 let serial_number = 0
 let money = 0
-let pot : number = 0
-let player_money: number[] = []
-let searching_for_players = 0
-let _message2 = ""
+let board_cards: string[] = []
+let my_cards: string[] = []
 let _winner = 0
+let _message2 = ""
+let searching_for_players = 0
+let player_money: number[] = []
+let pot: number = 0
+let role = 0
+let round_index = 0
+let card_groups: number[] = []
+let combos: any[] = []
+let result = ""
 money = 20
 serial_number = control.deviceSerialNumber()
 radio.setTransmitSerialNumber(true)
@@ -369,153 +436,8 @@ basic.forever(function () {
             basic.showString("WAITING")
         }
     } else if (role == ROLE_DEALER) {
-    	
+
     } else {
-    	
+
     }
 })
-
-function checkHand(hand: string[]) {
-    let result = ""
-    let hand_values: number[] = []
-    let hand_suits: string[] = []
-
-    for (let card of hand) {
-        let value = card.substr(0, 1)
-        switch (value) {
-            case "X": value = "10"
-                break;
-
-            case "J": value = "11"
-                break;
-
-            case "Q": value = "12"
-                break;
-
-            case "K": value = "13"
-                break;
-
-            case "A": value = "14"
-                break;
-
-        }
-        hand_suits.push(card.substr(1, 1))
-        hand_values.push(parseFloat(value))
-    }
-    let flush = checkSuits(hand_suits)
-    let v_result = orderValues(hand_values, hand)
-    let straight = 0
-    let combos: any[] = []
-
-    if (typeof v_result === "number") {
-        straight = v_result
-    }
-    else {
-        combos = v_result
-    }
-
-    if (flush && straight == 4) {
-        result = "Straight Flush"
-    } else if (flush) {
-        result = "Flush!"
-    } else if (straight == 4) {
-        result = "Straight"
-    } else {
-        result = "High Card"
-    }
-
-    if (combos.length == 1) {
-        switch (combos[0]) {
-            case 2:
-                result = "One Pair"
-                break;
-
-            case 3:
-                result = "Three of a kind"
-                break;
-
-            case 4:
-                result = "Four of a kind"
-                break;
-
-        }
-    }
-    else if (combos.length == 2) {
-        if (combos[0] == 2 && combos[1] == 2) {
-            result = "Two Pair"
-        }
-
-        if (combos[0] == 2 && combos[1] == 3 || combos[0] == 3 && combos[1] == 2) {
-            result = "Full House"
-        }
-    }
-
-
-    return result
-
-}
-
-function checkSuits(suits: any[]) {
-    let first_suit = suits[0]
-    let index2 = 1
-    let same_suits = true
-    while (same_suits == true && index2 < suits.length) {
-        if (first_suit == suits[index2]) {
-            index2 += 1
-        } else {
-            same_suits = false
-        }
-    }
-    return same_suits
-}
-
-function orderValues(values_array: number[], hand_array: string[]) {
-    let row = 0  //räknas hur många i rad finns
-    let card_groups: number[] = []
-    let g = 1
-
-    for (let i = 0; i < values_array.length; i++) {
-        for (let j = 0; j < values_array.length - i - 1; j++) {
-            if (values_array[j] < values_array[j + 1]) {
-                let spare_value = values_array[j]
-                values_array[j] = values_array[j + 1]
-                values_array[j + 1] = spare_value
-
-                let spare_card = hand_array[j]
-                hand_array[j] = hand_array[j + 1]
-                hand_array[j + 1] = spare_card
-            }
-        }
-    }
-
-    let current = 0
-    for (let k = 0; k < values_array.length; k++) {
-        let next = values_array[k + 1]
-
-        if (next !== undefined) {
-            if (values_array[k] == next + 1) {
-                current++
-                if (current > row) row = current
-            } else if (values_array[k] != next) {
-                current = 0
-            }
-
-            if (values_array[k] == next) {
-                g++
-            } else {
-                if (g > 1) card_groups.push(g)
-                g = 1
-            }
-        } else {
-            if (g > 1) card_groups.push(g)
-        }
-    }
-
-    card_groups = card_groups.filter(g => g > 1)
-
-    if (row >= 4) {
-        return row
-    } else {
-        return card_groups
-    }
-}
