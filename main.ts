@@ -10,7 +10,7 @@ function scramble_cards () {
     }
 }
 function fold () {
-    send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "-1")
+    send_message(serial_number, dealer_id, MSG_PLAYER_FINISH_TURN, "-1")
     game_stage = GAME_STAGE_PLAYING
 }
 function init_list_values () {
@@ -43,7 +43,7 @@ function get_message_contents (message: string) {
     for (let _k = 0; _k <= message.length - 1; _k++) {
         if (message.charAt(_k) == "|") {
             _delimeters_found_contents += 1
-            if (_delimeters_found_contents == 2) {
+            if (_delimeters_found_contents == 4) {
                 return message.substr(_k + 1, message.length - _k)
             }
         }
@@ -55,7 +55,7 @@ function get_message_kind (message: string) {
     for (let _j = 0; _j <= message.length - 1; _j++) {
         if (message.charAt(_j) == "|") {
             _delimeters_found_kind += 1
-            if (_delimeters_found_kind == 2) {
+            if (_delimeters_found_kind == 3) {
                 return parseInt(message.substr(_last_delimeter_index + 1, _j))
             } else {
                 _last_delimeter_index = _j
@@ -64,8 +64,8 @@ function get_message_kind (message: string) {
     }
     return -1
 }
-function send_message (reciever: number, kind: number, contents: string) {
-    _message = "" + reciever + "|" + kind + "|" + contents
+function send_message (sender: number, reciever: number, kind: number, contents: string) {
+    _message = "" + sender + "|" + reciever + "|" + kind + "|" + contents
     radio.sendString(_message)
 }
 input.onButtonPressed(Button.A, function () {
@@ -73,19 +73,22 @@ input.onButtonPressed(Button.A, function () {
         select_role(ROLE_DEALER)
         game_stage = GAME_STAGE_FINDING_PLAYERS
         while (game_stage == GAME_STAGE_FINDING_PLAYERS) {
-            send_message(0, MSG_JOIN_GAME_PING, "")
-            control.waitMicros(1000000)
+            send_message(serial_number, 0, MSG_JOIN_GAME_PING, "")
+            basic.pause(1000)
         }
     } else if (game_stage == GAME_STAGE_MY_TURN) {
         change_bet(-1)
     }
 })
 radio.onReceivedString(function (msg) {
-    // Dealer receives join requests while finding players
+    console.log(msg)
+// Dealer receives join requests while finding players
     _reciever = get_message_reciever(msg)
-    _sender = radio.receivedPacket(RadioPacketProperty.SerialNumber)
+    _sender = get_message_sender(msg)
     _kind = get_message_kind(msg)
+    // basic.showNumber(_kind)
     _contents = get_message_contents(msg)
+    basic.showNumber(_kind)
     if (_reciever == 0 || _reciever == serial_number) {
         if (role == ROLE_DEALER) {
             msg_recieved_dealer(_sender, _kind, _contents)
@@ -107,15 +110,21 @@ function get_player_index (player_id: number) {
 }
 function start_game () {
     game_stage = GAME_STAGE_PLAYING
-    send_message(0, MSG_START_GAME, "")
+    send_message(serial_number, 0, MSG_START_GAME, "")
     led.stopAnimation()
     basic.showString("!")
     play_round_dealer()
 }
 function get_message_reciever (message: string) {
-    for (let _i = 0; _i <= message.length - 1; _i++) {
-        if (message.charAt(_i) == "|") {
-            return parseInt(message.substr(0, _i))
+    _delimeters_found_kind = 0
+    for (let _n = 0; _n <= message.length - 1; _n++) {
+        if (message.charAt(_n) == "|") {
+            _delimeters_found_kind += 1
+            if (_delimeters_found_kind == 2) {
+                return parseInt(message.substr(_last_delimeter_index + 1, _n))
+            } else {
+                _last_delimeter_index = _n
+            }
         }
     }
     return -1
@@ -145,12 +154,17 @@ function build_card_list () {
     }
 }
 function add_player (player_id: number) {
+    for (let _player of players) {
+        if (player_id == _player) {
+            return
+        }
+    }
     players.push(player_id)
     player_money.push(200)
 }
 function call_bet_raise () {
     // we use the same function for calling, betting and raising
-    send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "" + bet + "")
+    send_message(serial_number, dealer_id, MSG_PLAYER_FINISH_TURN, "" + bet + "")
     game_stage = GAME_STAGE_PLAYING
 }
 function init_constants () {
@@ -173,8 +187,7 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
         basic.showNumber(7)
         if (msg_kind == MSG_PLAYER_JOIN_CONFIRM) {
-            add_player(radio.receivedPacket(RadioPacketProperty.SerialNumber))
-            send_message(radio.receivedPacket(RadioPacketProperty.SerialNumber), MSG_PLAYER_JOIN_CONFIRM, "")
+            add_player(sender)
             basic.showNumber(7)
         }
     }
@@ -196,7 +209,7 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
             }
             // calculate winner here
             if (players_left_to_call > 0) {
-                send_message(current_player, MSG_PLAYER_START_TURN, "" + highest_bet)
+                send_message(serial_number, current_player, MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
                 player_money[_winner] += pot
 for (let index = 0; index <= players.length - 1; index++) {
@@ -238,12 +251,12 @@ input.onButtonPressed(Button.B, function () {
     }
 })
 function play_round_dealer () {
-    // datalogger.log(datalogger.createCV("play round dealer", 0))
     deal_cards()
     players_left_to_call = players.length
-    current_player = 0
-    highest_bet = 0
-    send_message(players[0], MSG_PLAYER_START_TURN, "" + current_player)
+    current_player = players[0]
+    console.log("Player: " + players[0])
+highest_bet = 0
+    send_message(serial_number, current_player, MSG_PLAYER_START_TURN, "" + current_player)
 }
 input.onGesture(Gesture.Shake, function () {
     if (game_stage == GAME_STAGE_MY_TURN) {
@@ -259,7 +272,7 @@ function add_board_cards (count: number) {
 function msg_recieved_player (sender: number, msg_kind: number, msg_contents: string) {
     if (game_stage == GAME_STAGE_FINDING_PLAYERS && msg_kind == MSG_JOIN_GAME_PING) {
         dealer_id = sender
-        send_message(0, MSG_PLAYER_JOIN_CONFIRM, "")
+        send_message(serial_number, 0, MSG_PLAYER_JOIN_CONFIRM, "")
         game_stage = GAME_STAGE_WAITING_FOR_GAME_TO_START
     } else if (msg_kind == MSG_START_GAME && game_stage == GAME_STAGE_WAITING_FOR_GAME_TO_START) {
         game_stage = GAME_STAGE_PLAYING
@@ -282,6 +295,14 @@ function select_role (selected_role: number) {
         _display_char = "ERROR"
     }
     basic.showString(_display_char)
+}
+function get_message_sender (message: string) {
+    for (let _i = 0; _i <= message.length - 1; _i++) {
+        if (message.charAt(_i) == "|") {
+            return parseInt(message.substr(0, _i))
+        }
+    }
+    return -1
 }
 function next_round () {
     round_index += 1
@@ -313,7 +334,6 @@ let i = 0
 let highest_bet = 0
 let bet = 0
 let MSG_START_GAME = 0
-let players: number[] = []
 let ROLE_PLAYER = 0
 let role = 0
 let _contents = ""
@@ -348,8 +368,10 @@ let player_money: number[] = []
 let searching_for_players = 0
 let _message2 = ""
 let _winner = 0
+let players: number[] = []
 money = 20
 serial_number = control.deviceSerialNumber()
+radio.setTransmitSerialNumber(true)
 init_constants()
 let radio_group_number = 68
 radio.setGroup(radio_group_number)
