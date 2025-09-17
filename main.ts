@@ -350,6 +350,7 @@ let _message2 = ""
 let _winner = 0
 money = 20
 serial_number = control.deviceSerialNumber()
+radio.setTransmitSerialNumber(true)
 init_constants()
 let radio_group_number = 68
 radio.setGroup(radio_group_number)
