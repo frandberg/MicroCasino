@@ -374,3 +374,147 @@ basic.forever(function () {
     }
 })
 
+function checkHand(hand: string[]) {
+    let result = ""
+    let hand_values: number[] = []
+    let hand_suits: string[] = []
+
+    for (let card of hand) {
+        let value = card.substr(0, 1)
+        switch (value) {
+            case "X": value = "10"
+                break;
+
+            case "J": value = "11"
+                break;
+
+            case "Q": value = "12"
+                break;
+
+            case "K": value = "13"
+                break;
+
+            case "A": value = "14"
+                break;
+
+        }
+        hand_suits.push(card.substr(1, 1))
+        hand_values.push(parseFloat(value))
+    }
+    let flush = checkSuits(hand_suits)
+    let v_result = orderValues(hand_values, hand)
+    let straight = 0
+    let combos: any[] = []
+
+    if (typeof v_result === "number") {
+        straight = v_result
+    }
+    else {
+        combos = v_result
+    }
+
+    if (flush && straight == 4) {
+        result = "Straight Flush"
+    } else if (flush) {
+        result = "Flush!"
+    } else if (straight == 4) {
+        result = "Straight"
+    } else {
+        result = "High Card"
+    }
+
+    if (combos.length == 1) {
+        switch (combos[0]) {
+            case 2:
+                result = "One Pair"
+                break;
+
+            case 3:
+                result = "Three of a kind"
+                break;
+
+            case 4:
+                result = "Four of a kind"
+                break;
+
+        }
+    }
+    else if (combos.length == 2) {
+        if (combos[0] == 2 && combos[1] == 2) {
+            result = "Two Pair"
+        }
+
+        if (combos[0] == 2 && combos[1] == 3 || combos[0] == 3 && combos[1] == 2) {
+            result = "Full House"
+        }
+    }
+
+
+    return result
+
+}
+
+function checkSuits(suits: any[]) {
+    let first_suit = suits[0]
+    let index2 = 1
+    let same_suits = true
+    while (same_suits == true && index2 < suits.length) {
+        if (first_suit == suits[index2]) {
+            index2 += 1
+        } else {
+            same_suits = false
+        }
+    }
+    return same_suits
+}
+
+function orderValues(values_array: number[], hand_array: string[]) {
+    let row = 0  //räknas hur många i rad finns
+    let card_groups: number[] = []
+    let g = 1
+
+    for (let i = 0; i < values_array.length; i++) {
+        for (let j = 0; j < values_array.length - i - 1; j++) {
+            if (values_array[j] < values_array[j + 1]) {
+                let spare_value = values_array[j]
+                values_array[j] = values_array[j + 1]
+                values_array[j + 1] = spare_value
+
+                let spare_card = hand_array[j]
+                hand_array[j] = hand_array[j + 1]
+                hand_array[j + 1] = spare_card
+            }
+        }
+    }
+
+    let current = 0
+    for (let k = 0; k < values_array.length; k++) {
+        let next = values_array[k + 1]
+
+        if (next !== undefined) {
+            if (values_array[k] == next + 1) {
+                current++
+                if (current > row) row = current
+            } else if (values_array[k] != next) {
+                current = 0
+            }
+
+            if (values_array[k] == next) {
+                g++
+            } else {
+                if (g > 1) card_groups.push(g)
+                g = 1
+            }
+        } else {
+            if (g > 1) card_groups.push(g)
+        }
+    }
+
+    card_groups = card_groups.filter(g => g > 1)
+
+    if (row >= 4) {
+        return row
+    } else {
+        return card_groups
+    }
+}
