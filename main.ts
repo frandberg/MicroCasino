@@ -215,6 +215,15 @@ function init_constants() {
     MSG_START_GAME = 5
     MSG_GIVE_HAND = 6
     MSG_PLAYER_LOSE_GAME = 7
+    HAND_HIGH_CARD = 0
+    HAND_PAIR = 1
+    HAND_TWO_PAIR = 2
+    HAND_THREE_OF_A_KIND = 3
+    HAND_STRAIGHT = 4
+    HAND_FLUSH = 5
+    HAND_FULL_HOUSE = 6
+    HAND_FOUR_OF_A_KIND = 7
+    HAND_STRAIGHT_FLUSH = 8
 }
 function msg_recieved_dealer(sender: number, msg_kind: number, msg_contents: string) {
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
@@ -478,6 +487,15 @@ let next2 = 0
 let spare_card2 = 0
 let spare_value2 = 0
 let h = 0
+let HAND_FLUSH = 0
+let HAND_FOUR_OF_A_KIND = 0
+let HAND_FULL_HOUSE = 0
+let HAND_HIGH_CARD = 0
+let HAND_PAIR = 0
+let HAND_STRAIGHT = 0
+let HAND_STRAIGHT_FLUSH = 0
+let HAND_THREE_OF_A_KIND = 0
+let HAND_TWO_PAIR = 0
 let _display_char = ""
 let my_cards: string[] = []
 let game_over = false
