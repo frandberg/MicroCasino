@@ -90,18 +90,18 @@ input.onButtonPressed(Button.A, function () {
         }
     }
 })
-function checkSuits (suits: number[]) {
-    first_suit = suits[0]
-    index23 = 1
-    same_suits = true
-    while (same_suits == true && index23 < suits.length) {
-        if (first_suit == suits[index23]) {
-            index23 += 1
+function checkSuits() {
+    first_suit = global_suits[0]
+    index22 = 1
+    same_suits2 = true
+    while (same_suits2 == true && index22 < suits.length) {
+        if (first_suit == global_suits[index22]) {
+            index22 += 1
         } else {
-            same_suits = false
+            same_suits2 = false
         }
     }
-    return same_suits
+    return same_suits2
 }
 function show_board_cards () {
     if (game_stage == GAME_STAGE_PLAYING && role == ROLE_DEALER) {
@@ -397,8 +397,8 @@ function next_round () {
     highest_bet = 0
     console.log("next round index: " + round_index)
 if (players.length - players_folded.length == 1) {
-        pay_winner()
-        round_index = 0
+        //pay_winner()
+        //round_index = 0
     }
     if (round_index == 0) {
         console.log("round 0")
@@ -505,7 +505,7 @@ let _sender = 0
 let _reciever = 0
 let same_suits = false
 let index23 = 0
-let first_suit = 0
+let first_suit = ""
 let role = 0
 let MSG_JOIN_GAME_PING = 0
 let GAME_STAGE_FINDING_PLAYERS = 0
@@ -517,6 +517,7 @@ let _delimeters_found_contents = 0
 let card_values: number[] = []
 let card_values_alpha: string[] = []
 let suits: string[] = []
+let global_suits : string[] = []
 let GAME_STAGE_PLAYING = 0
 let MSG_PLAYER_FINISH_TURN = 0
 let dealer_id = 0
@@ -551,10 +552,8 @@ let flush = false
 let v_result = 0
 let straight = 0
 let g = 0
-let value2 = ""
-let flush2 = false
-let v_result2: number[] = []
-let straight2 = 0
+let same_suits2 = false
+let index22 = 0
 let result2 = ""
 let spare_value = 0
 let spare_card = 0
@@ -562,6 +561,12 @@ let next = 0
 let current = 0
 let row = 0
 let current_player = 0
+let straight2 = 0
+let v_result2: number[] = []
+let global_hand_array: string[] = []
+let flush2 = false
+let value2 = ""
+
 player_display_mode = "cards"
 board_cards_string = "-"
 dealer_display_mode = "cards"
@@ -604,3 +609,56 @@ basic.forever(function () {
         }
     }
 })
+function checkHand(hand: string[]) {
+    let hand_values: number[] = []
+    let hand_suits: string[] = []
+    for (let card2 of hand) {
+        value2 = card2.substr(0, 1)
+        if (value2 == "X") {
+            value2 = "10"
+        } else if (value2 == "J") {
+            value2 = "11"
+        } else if (value2 == "Q") {
+            value2 = "12"
+        } else if (value2 == "K") {
+            value2 = "13"
+        } else if (value2 == "A") {
+            value2 = "14"
+        }
+        hand_suits.push(card2.substr(1, 1))
+        hand_values.push(parseFloat(value2))
+    }
+    global_suits = hand_suits
+    flush2 = checkSuits()
+    global_hand_array = hand
+    v_result2 = orderValues(hand_values)
+    if (v_result2[0] == 4) {
+        straight2 = 4
+    }
+    if (flush2 && straight2 == 4) {
+        result2 = "Straight Flush"
+    } else if (flush2) {
+        result2 = "Flush!"
+    } else if (straight2 == 4) {
+        result2 = "Straight"
+    } else {
+        result2 = "High Card"
+    }
+    if (v_result2.length == 1) {
+        if (v_result2[0] == 1) {
+            result2 = "One Pair"
+        } else if (v_result2[0] == 2) {
+            result2 = "Three of a kind"
+        } else if (v_result2[0] == 3) {
+            result2 = "Four of a kind"
+        }
+    } else if (v_result2.length == 2) {
+        if (v_result2[0] == 2 && v_result2[1] == 2) {
+            result2 = "Two Pair"
+        }
+        if (v_result2[0] == 2 && v_result2[1] == 3 || v_result2[0] == 3 && v_result2[1] == 2) {
+            result2 = "Full House"
+        }
+    }
+    return result2
+}
