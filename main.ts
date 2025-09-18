@@ -191,7 +191,7 @@ function add_player (player_id: number) {
 function call_bet_raise () {
     // we use the same function for calling, betting and raising
     game_stage = GAME_STAGE_PLAYING
-    if(bet == 0){
+    if (bet == 0) {
         console.log("bet is 0")
     }
     send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "" + bet + "")
@@ -257,8 +257,8 @@ _player_id = radio.receivedPacket(RadioPacketProperty.SerialNumber)
                 players_left_to_call = players_left_to_call - 1
             }
             console.log("PLAYERS LEFT: " + players_left_to_call);
-            console.log("PLAYERS LIST: " + players.join(", "));
-            if (current_player == players.length - 1) {
+console.log("PLAYERS LIST: " + players.join(", "));
+if (current_player == players.length - 1) {
                 current_player = 0
             } else {
                 current_player += 1
@@ -266,7 +266,7 @@ _player_id = radio.receivedPacket(RadioPacketProperty.SerialNumber)
             // calculate winner here
             if (players_left_to_call > 0) {
                 console.log("START TURN TO: " + current_player);
-                send_message(players[current_player], MSG_PLAYER_START_TURN, "" + highest_bet)
+send_message(players[current_player], MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
             	
             }
@@ -287,21 +287,20 @@ function pay_winner () {
     let _winner = 0
     players_folded = []
     console.log("calculating a winner...");
-    player_money[_winner] = player_money[_winner] + pot
-
+player_money[_winner] = player_money[_winner] + pot
     console.log(player_money);
-    console.log(players);
-    for (let index22 = 0; index22 <= players.length - 1; index22++) {
+console.log(players);
+for (let index22 = 0; index22 <= players.length - 1; index22++) {
         if (player_money[index22] == 0) {
             console.log("sending msg lossed game")
-            send_message(players[index22], MSG_PLAYER_LOSE_GAME, "")
+send_message(players[index22], MSG_PLAYER_LOSE_GAME, "")
             players.removeAt(index22)
             player_money.removeAt(index22)
         }
     }
     console.log("players after removing loosers:")
-    console.log(player_money)
-    console.log(players)
+console.log(player_money)
+console.log(players)
 }
 input.onButtonPressed(Button.AB, function () {
     led.stopAnimation()
@@ -362,7 +361,7 @@ function add_board_cards (count: number) {
 function msg_recieved_player (sender: number, msg_kind: number, msg_contents: string) {
     if (msg_kind == MSG_PLAYER_LOSE_GAME) {
         console.log("player lossed")
-        game_over = true
+game_over = true
         return
     }
     if (game_stage == GAME_STAGE_FINDING_PLAYERS && msg_kind == MSG_JOIN_GAME_PING) {
@@ -377,12 +376,11 @@ send_message(0, MSG_PLAYER_JOIN_CONFIRM, "")
         game_stage = GAME_STAGE_MY_TURN
         led.stopAnimation()
         highest_bet = parseInt(msg_contents)
-        if(highest_bet > money){
+        if (highest_bet > money) {
             bet = money
-        }else{
+        } else {
             bet = highest_bet
         }
-        
     }
     if (msg_kind == MSG_GIVE_HAND) {
         my_cards[0] = msg_contents.substr(0, 2)
@@ -413,11 +411,11 @@ if (players.length - players_folded.length == 1) {
     }
     if (round_index == 0) {
         console.log("round 0")
-        deal_cards()
+deal_cards()
         round_index += 1
     } else if (round_index == 1) {
         console.log("adding cards")
-        add_board_cards(3)
+add_board_cards(3)
         round_index += 1
     } else if (round_index == 2) {
         add_board_cards(1)
@@ -436,6 +434,59 @@ if (players.length - players_folded.length == 1) {
     show_board_cards()
     send_message(players[0], MSG_PLAYER_START_TURN, "" + highest_bet)
 }
+function orderValues (values_array: number[]) {
+    let card_groups2: number[] = []
+    h = 1
+    for (let k = 0; k <= values_array.length - 1; k++) {
+        for (let l = 0; l <= values_array.length - k - 1 - 1; l++) {
+            if (values_array[l] < values_array[l + 1]) {
+                let global_hand_array: number[] = []
+                spare_value2 = values_array[l]
+                values_array[l] = values_array[l + 1]
+                values_array[l + 1] = spare_value2
+                spare_card2 = global_hand_array[l]
+                global_hand_array[l] = global_hand_array[l + 1]
+                global_hand_array[l + 1] = spare_card2
+            }
+        }
+    }
+    for (let m = 0; m <= values_array.length - 1; m++) {
+        next2 = values_array[m + 1]
+        if (next2 != undefined) {
+            if (values_array[m] == next2 + 1) {
+                current2 += 1
+                if (current2 > row2) {
+                    row2 = current2
+                }
+            } else if (values_array[m] != next2) {
+                current2 = 0
+            }
+            if (values_array[m] == next2) {
+                h += 1
+            } else {
+                if (h > 1) {
+                    card_groups2.push(h)
+                }
+                h = 1
+            }
+        } else {
+            if (h > 1) {
+                card_groups2.push(h)
+            }
+        }
+    }
+    if (row2 >= 4) {
+        return [row2]
+    } else {
+        return card_groups2
+    }
+}
+let row2 = 0
+let current2 = 0
+let next2 = 0
+let spare_card2 = 0
+let spare_value2 = 0
+let h = 0
 let _display_char = ""
 let my_cards: string[] = []
 let game_over = false
@@ -498,32 +549,37 @@ let money = 0
 let dealer_display_mode = ""
 let board_cards_string = ""
 let player_display_mode = ""
-let current_player = 0
-let row = 0
-let current = 0
-let next = 0
-let spare_card = 0
-let spare_value = 0
-let g = 0
-let straight = 0
-let v_result = 0
-let flush = false
-let value = ""
-let _card = ""
-let _card_2 = ""
-let _card_1 = ""
-let board_cards: string[] = []
-let _message2 = ""
-let searching_for_players = 0
-let round_index = 0
-let card_groups: number[] = []
-let combos: number[] = []
-let result = ""
-let game_stage = 0
-let _message = ""
-let players: number[] = []
-let player_money: number[] = []
 let players_left_to_call = 0
+let player_money: number[] = []
+let players: number[] = []
+let _message = ""
+let game_stage = 0
+let result = ""
+let combos: number[] = []
+let card_groups: number[] = []
+let round_index = 0
+let searching_for_players = 0
+let _message2 = ""
+let board_cards: string[] = []
+let _card_1 = ""
+let _card_2 = ""
+let _card = ""
+let value = ""
+let flush = false
+let v_result = 0
+let straight = 0
+let g = 0
+let value2 = ""
+let flush2 = false
+let v_result2: number[] = []
+let straight2 = 0
+let result2 = ""
+let spare_value = 0
+let spare_card = 0
+let next = 0
+let current = 0
+let row = 0
+let current_player = 0
 player_display_mode = "cards"
 board_cards_string = "-"
 dealer_display_mode = "cards"
@@ -542,7 +598,7 @@ while (game_stage == GAME_STAGE_ROLE_SELECTION) {
 }
 basic.forever(function () {
     if (role == ROLE_PLAYER) {
-        if (!game_over) {
+        if (!(game_over)) {
             if (game_stage == GAME_STAGE_MY_TURN) {
                 if (player_display_mode == "bet") {
                     basic.showNumber(bet)
