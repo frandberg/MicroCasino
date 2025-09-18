@@ -185,12 +185,15 @@ function build_card_list () {
 }
 function add_player (player_id: number) {
     players.push(player_id)
-    player_money.push(20)
+    player_money.push(money)
     player_cards.push([])
 }
 function call_bet_raise () {
     // we use the same function for calling, betting and raising
     game_stage = GAME_STAGE_PLAYING
+    if(bet == 0){
+        console.log("bet is 0")
+    }
     send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "" + bet + "")
     money += 0 - bet
     led.stopAnimation()
@@ -245,8 +248,8 @@ _player_id = radio.receivedPacket(RadioPacketProperty.SerialNumber)
                 players_left_to_call = players_left_to_call - 1
             }
             console.log("PLAYERS LEFT: " + players_left_to_call);
-console.log("PLAYERS LIST: " + players.join(", "));
-if (current_player == players.length - 1) {
+            console.log("PLAYERS LIST: " + players.join(", "));
+            if (current_player == players.length - 1) {
                 current_player = 0
             } else {
                 current_player += 1
@@ -254,7 +257,7 @@ if (current_player == players.length - 1) {
             // calculate winner here
             if (players_left_to_call > 0) {
                 console.log("START TURN TO: " + current_player);
-send_message(players[current_player], MSG_PLAYER_START_TURN, "" + highest_bet)
+                send_message(players[current_player], MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
             	
             }
@@ -275,20 +278,21 @@ function pay_winner () {
     let _winner = 0
     players_folded = []
     console.log("calculating a winner...");
-player_money[_winner] = player_money[_winner] + pot
+    player_money[_winner] = player_money[_winner] + pot
+
     console.log(player_money);
-console.log(players);
-for (let index22 = 0; index22 <= players.length - 1; index22++) {
+    console.log(players);
+    for (let index22 = 0; index22 <= players.length - 1; index22++) {
         if (player_money[index22] == 0) {
             console.log("sending msg lossed game")
-send_message(players[index22], MSG_PLAYER_LOSE_GAME, "")
+            send_message(players[index22], MSG_PLAYER_LOSE_GAME, "")
             players.removeAt(index22)
             player_money.removeAt(index22)
         }
     }
     console.log("players after removing loosers:")
-console.log(player_money)
-console.log(players)
+    console.log(player_money)
+    console.log(players)
 }
 input.onButtonPressed(Button.AB, function () {
     led.stopAnimation()
@@ -349,7 +353,7 @@ function add_board_cards (count: number) {
 function msg_recieved_player (sender: number, msg_kind: number, msg_contents: string) {
     if (msg_kind == MSG_PLAYER_LOSE_GAME) {
         console.log("player lossed")
-game_over = true
+        game_over = true
         return
     }
     if (game_stage == GAME_STAGE_FINDING_PLAYERS && msg_kind == MSG_JOIN_GAME_PING) {
@@ -364,7 +368,12 @@ send_message(0, MSG_PLAYER_JOIN_CONFIRM, "")
         game_stage = GAME_STAGE_MY_TURN
         led.stopAnimation()
         highest_bet = parseInt(msg_contents)
-        bet = highest_bet
+        if(highest_bet > money){
+            bet = money
+        }else{
+            bet = highest_bet
+        }
+        
     }
     if (msg_kind == MSG_GIVE_HAND) {
         my_cards[0] = msg_contents.substr(0, 2)
@@ -389,14 +398,16 @@ function next_round () {
     current_player = 0
     highest_bet = 0
     console.log("next round index: " + round_index)
-if (players.length - players_folded.length == 1) {
-        pay_winner()
-        round_index = 0
-    }
+//if (players.length - players_folded.length == 1) {
+        //pay_winner()
+        //round_index = 0
+    //}
     if (round_index == 0) {
+        console.log("round 0")
         deal_cards()
         round_index += 1
     } else if (round_index == 1) {
+        console.log("adding cards")
         add_board_cards(3)
         round_index += 1
     } else if (round_index == 2) {
@@ -513,7 +524,7 @@ while (game_stage == GAME_STAGE_ROLE_SELECTION) {
 }
 basic.forever(function () {
     if (role == ROLE_PLAYER) {
-        if (!(game_over)) {
+        if (!game_over) {
             if (game_stage == GAME_STAGE_MY_TURN) {
                 if (player_display_mode == "bet") {
                     basic.showNumber(bet)
