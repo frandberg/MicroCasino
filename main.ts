@@ -682,7 +682,7 @@ function checkHand(hand: string[]) {
     return result2
 }
 
-function get_best_hand(player_cards: string[]){
+function get_best_hand_score(player_cards: string[]){
     if(player_cards.length != 2){
         basic.showString("ERROR NOT 2 CARDS")
     }
@@ -724,5 +724,5 @@ function get_best_hand(player_cards: string[]){
             }
         }
     }
-    return _best_hand    
+    return _best_score   
 }
