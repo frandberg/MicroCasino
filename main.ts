@@ -66,11 +66,11 @@ function get_message_kind(message: string) {
 }
 function send_message(reciever: number, kind: number, contents: string) {
     _message = "" + reciever + "|" + kind + "|" + contents
-    if (_message.length >= 19) {
+    if (_message.length > 19) {
         led.stopAnimation()
         console.log("The message that would have been too long: ")
         console.log(_message)
-        basic.showString("ERROR, MESSAGE TOO LONG")
+        basic.showString("E: " + _message)
     }
     radio.sendString(_message)
 }
@@ -216,6 +216,8 @@ function init_constants() {
     MSG_GIVE_HAND = 6
     MSG_PLAYER_LOSE_GAME = 7
     MSG_PLAYER_WIN_ROUND = 8
+    MSG_PLAYER_ROUND_OVER = 9
+    MSG_PLAYER_REJOIN = 10 //Unused
     HAND_HIGH_CARD = 0
     HAND_PAIR = 1
     HAND_TWO_PAIR = 2
@@ -227,6 +229,7 @@ function init_constants() {
     HAND_STRAIGHT_FLUSH = 8
 }
 function msg_recieved_dealer(sender: number, msg_kind: number, msg_contents: string) {
+
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
         if (msg_kind == MSG_PLAYER_JOIN_CONFIRM) {
             if (get_player_index(radio.receivedPacket(RadioPacketProperty.SerialNumber)) == -1) {
@@ -249,7 +252,25 @@ function msg_recieved_dealer(sender: number, msg_kind: number, msg_contents: str
                 players_folded.push(_player_id)
                 players_left_to_call = players_left_to_call - 1
             }
-            pot += _bet
+
+            let _player_has_paid = false
+            let _new_bet = _bet
+
+            for (let _index = 0; _index < already_paid_players.length; _index++){
+                if (_player_index == already_paid_players[_index]){
+                    _player_has_paid = true
+                    _new_bet = _bet - already_paid_money[_index]  
+                    already_paid_money[_index] = _bet
+                    break
+                }
+            }
+
+            if (!_player_has_paid) {
+                already_paid_players.push(_player_index)
+                already_paid_money.push(_new_bet)
+            }
+
+            pot += _new_bet
             player_money[_player_index] = player_money[_player_index] - _bet
             if (_bet > highest_bet) {
                 highest_bet = parseInt(msg_contents)
@@ -312,7 +333,7 @@ function pay_winner() {
     console.log(player_money);
     console.log(players);
 
-    send_message(players[_winner], MSG_PLAYER_WIN_ROUND, "" + pot)
+    send_message(players[_winner], MSG_PLAYER_WIN_ROUND, "" + player_money[_winner])
     pot = 0
 
     for (let index22 = 0; index22 <= players.length - 1; index22++) {
@@ -321,11 +342,17 @@ function pay_winner() {
             send_message(players[index22], MSG_PLAYER_LOSE_GAME, "")
             players.removeAt(index22)
             player_money.removeAt(index22)
+        } else {
+            if (index22 == _winner){
+                continue;
+            }
+            send_message(players[index22], MSG_PLAYER_ROUND_OVER, "" + player_money[index22])
         }
     }
     console.log("players after removing loosers:")
     console.log(player_money)
     console.log(players)
+    board_cards = []
     basic.showString("ROUND OVER")
 }
 
@@ -388,7 +415,14 @@ function add_board_cards(count: number) {
 }
 function msg_recieved_player(sender: number, msg_kind: number, msg_contents: string) {
     if (msg_kind == MSG_PLAYER_WIN_ROUND) {
-        basic.showString("W:+" + msg_contents)
+        led.stopAnimation()
+        money = parseInt(msg_contents)
+        basic.showString("W TOT:" + msg_contents)
+    }
+    if (msg_kind == MSG_PLAYER_ROUND_OVER) {
+        led.stopAnimation()
+        money = parseInt(msg_contents)
+        basic.showString("ROUND OVER: " + msg_contents)
     }
     if (msg_kind == MSG_PLAYER_LOSE_GAME) {
         console.log("player lossed")
@@ -412,6 +446,7 @@ function msg_recieved_player(sender: number, msg_kind: number, msg_contents: str
         } else {
             bet = highest_bet
         }
+        player_display_mode = "bet"
     }
     if (msg_kind == MSG_GIVE_HAND) {
         my_cards[0] = msg_contents.substr(0, 2)
@@ -433,6 +468,8 @@ function select_role(selected_role: number) {
 }
 function next_round() {
     players_left_to_call = players.length - players_folded.length
+    already_paid_money = []
+    already_paid_players = []
     current_player = 0
     highest_bet = 0
     console.log("next round index: " + round_index)
@@ -471,7 +508,6 @@ function orderValues(values_array: number[]) {
     for (let k = 0; k <= values_array.length - 1; k++) {
         for (let l = 0; l <= values_array.length - k - 1 - 1; l++) {
             if (values_array[l] < values_array[l + 1]) {
-                let global_hand_array: number[] = []
                 spare_value2 = values_array[l]
                 values_array[l] = values_array[l + 1]
                 values_array[l + 1] = spare_value2
@@ -481,6 +517,7 @@ function orderValues(values_array: number[]) {
             }
         }
     }
+    row2 = 0
     for (let m = 0; m <= values_array.length - 1; m++) {
         next2 = values_array[m + 1]
         if (next2 != undefined) {
@@ -506,16 +543,19 @@ function orderValues(values_array: number[]) {
             }
         }
     }
+
+
     if (row2 >= 4) {
-        return [row2]
+        return [0,0,0,0,row2]
     } else {
         return card_groups2
     }
 }
+let has_folded = false
 let row2 = 0
 let current2 = 0
 let next2 = 0
-let spare_card2 = 0
+let spare_card2 = ""
 let spare_value2 = 0
 let h = 0
 let HAND_FLUSH = 0
@@ -539,7 +579,9 @@ let MSG_PLAYER_LOSE_GAME = 0
 let MSG_PLAYER_JOIN_CONFIRM = 0
 let MSG_SEARCHING_FOR_PLAYERS = 0
 let MSG_PLAYER_WIN_ROUND = 0
+let MSG_PLAYER_ROUND_OVER = 0
 let MSG_PLAYER_START_TURN = 0
+let MSG_PLAYER_REJOIN = 0 //Unused
 let GAME_STAGE_FINISHED = 0
 let GAME_STAGE_WAITING_FOR_GAME_TO_START = 0
 let j = 0
@@ -616,6 +658,8 @@ let v_result2: number[] = []
 let global_hand_array: string[] = []
 let flush2 = false
 let value2 = ""
+let already_paid_money: number[] = []
+let already_paid_players: number[] = []
 
 player_display_mode = "cards"
 board_cards_string = "-"
@@ -630,6 +674,14 @@ game_stage = GAME_STAGE_ROLE_SELECTION
 init_list_values()
 build_card_list()
 scramble_cards()
+
+// TEST 
+//board_cards = ["XD", "JC", "QS", "XH", "4C"]
+//let _test_cards = ["XS", "XC"]
+//let _expection = HAND_FOUR_OF_A_KIND
+//let _test_hand_val = get_best_hand_score(_test_cards)
+//console.log("ÖNSKAT VÄRDE: " + _expection + "; FAKTISKT VÄRDE: " + _test_hand_val)
+
 while (game_stage == GAME_STAGE_ROLE_SELECTION) {
     basic.showString("A=DEALER:B=PLAYER")
 }
@@ -682,8 +734,10 @@ function checkHand(hand: string[]) {
     flush2 = checkSuits()
     global_hand_array = hand
     v_result2 = orderValues(hand_values)
-    if (v_result2[0] == 4) {
-        straight2 = 4
+    if (v_result2.length == 5) {
+        if (v_result2[4] == 4){
+            straight2 = 4
+        }
     }
     if (flush2 && straight2 == 4) {
         result2 = HAND_STRAIGHT_FLUSH
@@ -696,10 +750,12 @@ function checkHand(hand: string[]) {
     }
     if (v_result2.length == 1) {
         if (v_result2[0] == 1) {
-            result2 = HAND_PAIR
+            result2 = HAND_HIGH_CARD
         } else if (v_result2[0] == 2) {
-            result2 = HAND_THREE_OF_A_KIND
+            result2 = HAND_PAIR
         } else if (v_result2[0] == 3) {
+            result2 = HAND_THREE_OF_A_KIND
+        } else if (v_result2[0] == 4) {
             result2 = HAND_FOUR_OF_A_KIND
         }
     } else if (v_result2.length == 2) {
@@ -718,7 +774,7 @@ function get_best_hand_score(player_cards: string[]){
         basic.showString("ERROR NOT 2 CARDS")
     }
     if(board_cards.length != 5){
-        basic.showString("ERROR WRONG # OF BOARD CARDS")
+        basic.showString("ERROR BOARD CARDS: " + board_cards.length)
     }
     
     let _all_cards = []
@@ -755,5 +811,7 @@ function get_best_hand_score(player_cards: string[]){
             }
         }
     }
+    console.log("BEST HAND: " + _best_hand.join(", "))
+    console.log("BEST SCORE: " + _best_score)
     return _best_score   
 }
