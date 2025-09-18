@@ -285,6 +285,7 @@ input.onGesture(Gesture.ScreenDown, function () {
 })
 function pay_winner() {
     let _winner = 0
+
     players_folded = []
     console.log("calculating a winner...");
     player_money[_winner] = player_money[_winner] + pot
@@ -572,7 +573,7 @@ let straight = 0
 let g = 0
 let same_suits2 = false
 let index22 = 0
-let result2 = ""
+let result2 = 0
 let spare_value = 0
 let spare_card = 0
 let next = 0
@@ -654,28 +655,28 @@ function checkHand(hand: string[]) {
         straight2 = 4
     }
     if (flush2 && straight2 == 4) {
-        result2 = "Straight Flush"
+        result2 = HAND_STRAIGHT_FLUSH
     } else if (flush2) {
-        result2 = "Flush!"
+        result2 = HAND_FLUSH
     } else if (straight2 == 4) {
-        result2 = "Straight"
+        result2 = HAND_STRAIGHT
     } else {
-        result2 = "High Card"
+        result2 = HAND_HIGH_CARD
     }
     if (v_result2.length == 1) {
         if (v_result2[0] == 1) {
-            result2 = "One Pair"
+            result2 = HAND_PAIR
         } else if (v_result2[0] == 2) {
-            result2 = "Three of a kind"
+            result2 = HAND_THREE_OF_A_KIND
         } else if (v_result2[0] == 3) {
-            result2 = "Four of a kind"
+            result2 = HAND_FOUR_OF_A_KIND
         }
     } else if (v_result2.length == 2) {
         if (v_result2[0] == 2 && v_result2[1] == 2) {
-            result2 = "Two Pair"
+            result2 = HAND_TWO_PAIR
         }
         if (v_result2[0] == 2 && v_result2[1] == 3 || v_result2[0] == 3 && v_result2[1] == 2) {
-            result2 = "Full House"
+            result2 = HAND_FULL_HOUSE
         }
     }
     return result2
