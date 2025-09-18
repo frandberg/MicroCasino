@@ -140,7 +140,8 @@ function checkSuits () {
     first_suit = global_suits[0]
     index222 = 1
     same_suits2 = true
-    while (same_suits2 == true && index222 < suits.length) {
+    console.log("GLOBAL_SUITS: " + global_suits.join(", "))
+    while (same_suits2 == true && index222 < global_suits.length) {
         if (first_suit == global_suits[index222]) {
             index222 += 1
         } else {
@@ -788,11 +789,11 @@ init_list_values()
 build_card_list()
 scramble_cards()
 
-//board_cards = ["JD","JS","QS","XS","9S"]
-//let _test_cards = ["8S", "XC"]
-//let _expection = HAND_THREE_OF_A_KIND
-//let _test_hand_val = get_best_hand_score(_test_cards)
-//console.log("ÖNSKAT VÄRDE: " + _expection + "; FAKTISKT VÄRDE: " + _test_hand_val)
+board_cards = ["2D","JH","QS","4S","9S"]
+let _test_cards = ["8S", "5C"]
+let _expection = HAND_THREE_OF_A_KIND
+let _test_hand_val = get_best_hand_score(_test_cards)
+console.log("ÖNSKAT VÄRDE: " + _expection + "; FAKTISKT VÄRDE: " + _test_hand_val)
 
 while (game_stage == GAME_STAGE_ROLE_SELECTION) {
     basic.showString("A=DEALER:B=PLAYER")
