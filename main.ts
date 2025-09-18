@@ -317,7 +317,9 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
             }
             
             let _should_keep_checking = true
+            let _has_folded = false
             while (_should_keep_checking) {
+                _has_folded = false
                 if (current_player == players.length - 1) {
                     current_player = 0
                 } else {
@@ -325,8 +327,12 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
                 }
                 for (let _s = 0; _s < players_folded.length; _s++){
                     if (players[current_player] == players_folded[_s]){
-                        continue;
+                        _has_folded = true
+                        break
                     }
+                }
+                if (_has_folded) {
+                    continue
                 }
                 _should_keep_checking = false
             }           
@@ -348,22 +354,37 @@ input.onGesture(Gesture.ScreenDown, function () {
 })
 function pay_winner () {
     best_hand_score = -1
-    // exclude folded players
-    for (let i = 0; i <= players.length - 1; i++) {
-        for (let j = 0; j <= players_folded.length - 1; j++) {
-            if (players_folded[j] == players[i]) {
-                player_folded = true
-                break;
+
+    if (players.length - players_folded.length <= 1){
+        for (let _a = 0; _a < players.length; _a++) {
+            let _is_winner = true
+            for (let _w = 0; _w < players_folded.length; _w++){
+                _is_winner = false
+                break
+            }
+            if (_is_winner){
+                _winner = _a
             }
         }
-        if (player_folded) {
-            continue;
-        }
-        score = get_best_hand_score(player_cards[i])
-        if (score > best_hand_score) {
-            _winner = i
+    }
+    else{
+        for (let i = 0; i <= players.length - 1; i++) {
+            for (let j = 0; j <= players_folded.length - 1; j++) {
+                if (players_folded[j] == players[i]) {
+                    player_folded = true
+                    break;
+                }
+            }
+            if (player_folded) {
+                continue;
+            }
+            score = get_best_hand_score(player_cards[i])
+            if (score > best_hand_score) {
+                _winner = i
+            }
         }
     }
+    // exclude folded players
     players_folded = []
 player_money[_winner] = player_money[_winner] + pot
 send_message(players[_winner], MSG_PLAYER_WIN_ROUND, "" + player_money[_winner])
