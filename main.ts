@@ -681,3 +681,48 @@ function checkHand(hand: string[]) {
     }
     return result2
 }
+
+function get_best_hand(player_cards: string[]){
+    if(player_cards.length != 2){
+        basic.showString("ERROR NOT 2 CARDS")
+    }
+    if(board_cards.length != 5){
+        basic.showString("ERROR WRONG # OF BOARD CARDS")
+    }
+    
+    let _all_cards = []
+    for(let _card of board_cards){
+        _all_cards.push(_card)
+    }
+    _all_cards.push(player_cards[0])
+    _all_cards.push(player_cards[1])
+
+    let _combinations = []
+    let _best_score = 0
+    let _best_hand: string[] = []
+
+    // Pick 5 distinct indices i<j<k<l<m
+    for (let i = 0; i < _all_cards.length - 4; i++) {
+        for (let j = i + 1; j < _all_cards.length - 3; j++) {
+            for (let k = j + 1; k < _all_cards.length - 2; k++) {
+                for (let l = k + 1; l < _all_cards.length - 1; l++) {
+                    for (let m = l + 1; m < _all_cards.length; m++) {
+
+                        // Build one hand
+                        let hand: string[] = [
+                            _all_cards[i], _all_cards[j], _all_cards[k], _all_cards[l], _all_cards[m]
+                        ]
+                        // Evaluate it
+                        let score = checkHand(hand)
+
+                        if (score > _best_score) {
+                            _best_score = score
+                            _best_hand = hand
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return _best_hand    
+}
