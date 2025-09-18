@@ -286,6 +286,25 @@ input.onGesture(Gesture.ScreenDown, function () {
 })
 function pay_winner() {
     let _winner = 0
+    let player_folded = false
+    let best_hand_score = -1
+    // exclude folded players
+    for (let i = 0; i <= players.length - 1; i++) {
+        let score = 0
+        for (let j = 0; j <= players_folded.length - 1; j++) {
+            if (players_folded[j] == players[i]) {
+                player_folded = true
+                break;
+            }
+        }
+        if (player_folded) {
+            continue;
+        }
+        score = get_best_hand_score(player_cards[i])
+        if (score > best_hand_score) {
+            _winner = i
+        }
+    }
 
     players_folded = []
     console.log("calculating a winner...");
@@ -309,6 +328,8 @@ function pay_winner() {
     console.log(players)
     basic.showString("ROUND OVER")
 }
+
+ 
 input.onButtonPressed(Button.AB, function () {
     led.stopAnimation()
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
