@@ -394,14 +394,14 @@ function select_role (selected_role: number) {
     basic.showString(_display_char)
 }
 function next_round () {
-    players_left_to_call = players.length - players_folded.length - 1
+    players_left_to_call = players.length - players_folded.length
     current_player = 0
     highest_bet = 0
     console.log("next round index: " + round_index)
-//if (players.length - players_folded.length == 1) {
-        //pay_winner()
-        //round_index = 0
-    //}
+if (players.length - players_folded.length == 1) {
+        pay_winner()
+        round_index = 0
+    }
     if (round_index == 0) {
         console.log("round 0")
         deal_cards()
