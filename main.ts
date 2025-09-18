@@ -316,12 +316,21 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
                 }
             }
             
-            
-if (current_player == players.length - 1) {
-                current_player = 0
-            } else {
-                current_player += 1
-            }
+            let _should_keep_checking = true
+            while (_should_keep_checking) {
+                if (current_player == players.length - 1) {
+                    current_player = 0
+                } else {
+                    current_player += 1
+                }
+                for (let _s = 0; _s < players_folded.length; _s++){
+                    if (players[current_player] == players_folded[_s]){
+                        continue;
+                    }
+                }
+                _should_keep_checking = false
+            }           
+
             // calculate winner here
             if (players_left_to_call > 0) {
                 
@@ -536,6 +545,21 @@ function next_round () {
     already_paid_money = []
     already_paid_players = []
     current_player = 0
+    let _should_keep_checking = true
+    while (_should_keep_checking) {
+
+        if (current_player > players.length) {
+            break;
+        }
+        for (let _s = 0; _s < players_folded.length; _s++) {
+            if (players[current_player] == players_folded[_s]) {
+                current_player += 1
+                continue;
+            }
+        }
+        
+        _should_keep_checking = false
+    }
     highest_bet = 0
 if (players.length - players_folded.length == 1) {
         pay_winner()
@@ -621,6 +645,8 @@ function orderValues (values_array: number[]) {
         return card_groups2
     }
 }
+
+
 let current2 = 0
 let next2 = 0
 let row2 = 0
