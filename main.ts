@@ -185,7 +185,7 @@ function build_card_list () {
 }
 function add_player (player_id: number) {
     players.push(player_id)
-    player_money.push(200)
+    player_money.push(20)
     player_cards.push([])
 }
 function call_bet_raise () {
@@ -211,6 +211,7 @@ function init_constants () {
     MSG_JOIN_GAME_PING = 4
     MSG_START_GAME = 5
     MSG_GIVE_HAND = 6
+    MSG_PLAYER_LOSE_GAME = 7
 }
 function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: string) {
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
@@ -231,13 +232,17 @@ _player_id = radio.receivedPacket(RadioPacketProperty.SerialNumber)
                 return
             }
             _bet = parseInt(msg_contents)
+            if (_bet == -1) {
+                players_folded.push(_player_id)
+                players_left_to_call = players_left_to_call - 1
+            }
             pot += _bet
             player_money[_player_index] = player_money[_player_index] - _bet
             if (_bet > highest_bet) {
                 highest_bet = parseInt(msg_contents)
                 players_left_to_call = players.length - 1
             } else {
-                players_left_to_call += 0 - 1
+                players_left_to_call = players_left_to_call - 1
             }
             console.log("PLAYERS LEFT: " + players_left_to_call);
 console.log("PLAYERS LIST: " + players.join(", "));
@@ -251,20 +256,7 @@ if (current_player == players.length - 1) {
                 console.log("START TURN TO: " + current_player);
 send_message(players[current_player], MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
-                let _winner = 0
-                console.log("calculating a winner...");
-player_money[_winner] = player_money[_winner] + pot
-                console.log(player_money);
-console.log(players);
-for (let index2 = 0; index2 <= players.length - 1; index2++) {
-                    if (player_money[index2] == 0) {
-                        players.removeAt(index2)
-                        player_money.removeAt(index2)
-                    }
-                }
-                console.log("players after removing loosers:")
-console.log(player_money)
-console.log(players)
+            	
             }
             // Only call next_round if there are
             // no players left to play this round
@@ -279,6 +271,25 @@ input.onGesture(Gesture.ScreenDown, function () {
         fold()
     }
 })
+function pay_winner () {
+    let _winner = 0
+    players_folded = []
+    console.log("calculating a winner...");
+player_money[_winner] = player_money[_winner] + pot
+    console.log(player_money);
+console.log(players);
+for (let index22 = 0; index22 <= players.length - 1; index22++) {
+        if (player_money[index22] == 0) {
+            console.log("sending msg lossed game")
+send_message(players[index22], MSG_PLAYER_LOSE_GAME, "")
+            players.removeAt(index22)
+            player_money.removeAt(index22)
+        }
+    }
+    console.log("players after removing loosers:")
+console.log(player_money)
+console.log(players)
+}
 input.onButtonPressed(Button.AB, function () {
     led.stopAnimation()
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
@@ -297,8 +308,11 @@ for (let card of board_cards) {
         }
     }
     if (role == ROLE_PLAYER) {
-        console.log(my_cards)
-basic.showString("" + my_cards[0] + my_cards[1])
+        if (player_display_mode == "bet") {
+            player_display_mode = "cards"
+        } else if (player_display_mode == "cards" && game_stage == GAME_STAGE_MY_TURN) {
+            player_display_mode = "bet"
+        }
     }
 })
 input.onButtonPressed(Button.B, function () {
@@ -333,6 +347,11 @@ function add_board_cards (count: number) {
     }
 }
 function msg_recieved_player (sender: number, msg_kind: number, msg_contents: string) {
+    if (msg_kind == MSG_PLAYER_LOSE_GAME) {
+        console.log("player lossed")
+game_over = true
+        return
+    }
     if (game_stage == GAME_STAGE_FINDING_PLAYERS && msg_kind == MSG_JOIN_GAME_PING) {
         game_stage = GAME_STAGE_WAITING_FOR_GAME_TO_START
         dealer_id = sender
@@ -366,11 +385,15 @@ function select_role (selected_role: number) {
     basic.showString(_display_char)
 }
 function next_round () {
-    players_left_to_call = players.length - 1
+    players_left_to_call = players.length - players_folded.length - 1
     current_player = 0
     highest_bet = 0
     console.log("next round index: " + round_index)
-if (round_index == 0) {
+if (players.length - players_folded.length == 1) {
+        pay_winner()
+        round_index = 0
+    }
+    if (round_index == 0) {
         deal_cards()
         round_index += 1
     } else if (round_index == 1) {
@@ -385,8 +408,7 @@ if (round_index == 0) {
     } else {
         // pay out jackpot
         round_index = 0
-        // basic.showString("Player won")
-        // game_stage = GAME_STAGE_FINISHED
+        pay_winner()
         if (players.length == 1) {
         	
         }
@@ -395,10 +417,14 @@ if (round_index == 0) {
     send_message(players[0], MSG_PLAYER_START_TURN, "" + highest_bet)
 }
 let _display_char = ""
+let my_cards: string[] = []
+let game_over = false
 let pot = 0
+let players_folded: number[] = []
 let _bet = 0
 let _player_index = 0
 let _player_id = 0
+let MSG_PLAYER_LOSE_GAME = 0
 let MSG_PLAYER_JOIN_CONFIRM = 0
 let MSG_SEARCHING_FOR_PLAYERS = 0
 let MSG_PLAYER_START_TURN = 0
@@ -442,33 +468,34 @@ let serial_number = 0
 let money = 0
 let dealer_display_mode = ""
 let board_cards_string = ""
-let players_left_to_call = 0
-let player_money: number[] = []
-let players: number[] = []
-let _message = ""
-let game_stage = 0
-let result = ""
-let combos: number[] = []
-let card_groups: number[] = []
-let round_index = 0
-let searching_for_players = 0
-let _message2 = ""
-let my_cards: string[] = []
-let board_cards: string[] = []
-let _card_1 = ""
-let _card_2 = ""
-let _card = ""
-let value = ""
-let flush = false
-let v_result = 0
-let straight = 0
-let g = 0
-let spare_value = 0
-let spare_card = 0
-let next = 0
-let current = 0
-let row = 0
+let player_display_mode = ""
 let current_player = 0
+let row = 0
+let current = 0
+let next = 0
+let spare_card = 0
+let spare_value = 0
+let g = 0
+let straight = 0
+let v_result = 0
+let flush = false
+let value = ""
+let _card = ""
+let _card_2 = ""
+let _card_1 = ""
+let board_cards: string[] = []
+let _message2 = ""
+let searching_for_players = 0
+let round_index = 0
+let card_groups: number[] = []
+let combos: number[] = []
+let result = ""
+let game_stage = 0
+let _message = ""
+let players: number[] = []
+let player_money: number[] = []
+let players_left_to_call = 0
+player_display_mode = "cards"
 board_cards_string = "-"
 dealer_display_mode = "cards"
 money = 20
@@ -486,10 +513,19 @@ while (game_stage == GAME_STAGE_ROLE_SELECTION) {
 }
 basic.forever(function () {
     if (role == ROLE_PLAYER) {
-        if (game_stage == GAME_STAGE_MY_TURN) {
-            basic.showNumber(bet)
-        } else if (game_stage == GAME_STAGE_PLAYING) {
-            basic.showString("WAITING")
+        if (!(game_over)) {
+            if (game_stage == GAME_STAGE_MY_TURN) {
+                if (player_display_mode == "bet") {
+                    basic.showNumber(bet)
+                } else if (player_display_mode == "cards" && my_cards.length == 2) {
+                    basic.showString("" + my_cards[0] + my_cards[1])
+                }
+            } else if (game_stage == GAME_STAGE_PLAYING && my_cards.length == 2) {
+                basic.showString("" + my_cards[0] + my_cards[1])
+            }
+        } else {
+            led.stopAnimation()
+            basic.showString("L")
         }
     } else if (role == ROLE_DEALER) {
         if (game_stage == GAME_STAGE_PLAYING) {
@@ -499,7 +535,5 @@ basic.forever(function () {
                 basic.showNumber(pot)
             }
         }
-    } else {
-    	
     }
 })
