@@ -57,6 +57,7 @@ function scramble_cards () {
 function fold () {
     send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "-1")
     game_stage = GAME_STAGE_PLAYING
+    basic.showString("FOLD")
 }
 function init_list_values () {
     suits = [
@@ -291,27 +292,30 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
                 players_folded.push(_player_id)
                 players_left_to_call = players_left_to_call - 1
             }
-            _new_bet = _bet
-            for (let _index = 0; _index <= already_paid_players.length - 1; _index++) {
-                if (_player_index == already_paid_players[_index]) {
-                    _player_has_paid = true
-                    _new_bet = _bet - already_paid_money[_index]
-                    already_paid_money[_index] = _bet
-                    break;
+            else{
+                _new_bet = _bet
+                for (let _index = 0; _index <= already_paid_players.length - 1; _index++) {
+                    if (_player_index == already_paid_players[_index]) {
+                        _player_has_paid = true
+                        _new_bet = _bet - already_paid_money[_index]
+                        already_paid_money[_index] = _bet
+                        break;
+                    }
+                }
+                if (!(_player_has_paid)) {
+                    already_paid_players.push(_player_index)
+                    already_paid_money.push(_new_bet)
+                }
+                pot += _new_bet
+                player_money[_player_index] = player_money[_player_index] - _bet
+                if (_bet > highest_bet) {
+                    highest_bet = parseInt(msg_contents)
+                    players_left_to_call = players.length - 1
+                } else {
+                    players_left_to_call = players_left_to_call - 1
                 }
             }
-            if (!(_player_has_paid)) {
-                already_paid_players.push(_player_index)
-                already_paid_money.push(_new_bet)
-            }
-            pot += _new_bet
-            player_money[_player_index] = player_money[_player_index] - _bet
-            if (_bet > highest_bet) {
-                highest_bet = parseInt(msg_contents)
-                players_left_to_call = players.length - 1
-            } else {
-                players_left_to_call = players_left_to_call - 1
-            }
+            
             
 if (current_player == players.length - 1) {
                 current_player = 0
@@ -323,11 +327,6 @@ if (current_player == players.length - 1) {
                 
 send_message(players[current_player], MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
-            	
-            }
-            // Only call next_round if there are
-            // no players left to play this round
-            if (players_left_to_call == 0) {
                 next_round()
             }
         }
