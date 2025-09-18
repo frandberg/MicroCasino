@@ -215,6 +215,7 @@ function init_constants() {
     MSG_START_GAME = 5
     MSG_GIVE_HAND = 6
     MSG_PLAYER_LOSE_GAME = 7
+    MSG_PLAYER_WIN_ROUND = 8
     HAND_HIGH_CARD = 0
     HAND_PAIR = 1
     HAND_TWO_PAIR = 2
@@ -291,6 +292,10 @@ function pay_winner() {
     player_money[_winner] = player_money[_winner] + pot
     console.log(player_money);
     console.log(players);
+
+    send_message(players[_winner], MSG_PLAYER_WIN_ROUND, "" + pot)
+    pot = 0
+
     for (let index22 = 0; index22 <= players.length - 1; index22++) {
         if (player_money[index22] == 0) {
             console.log("sending msg lossed game")
@@ -302,6 +307,7 @@ function pay_winner() {
     console.log("players after removing loosers:")
     console.log(player_money)
     console.log(players)
+    basic.showString("ROUND OVER")
 }
 input.onButtonPressed(Button.AB, function () {
     led.stopAnimation()
@@ -360,6 +366,9 @@ function add_board_cards(count: number) {
     }
 }
 function msg_recieved_player(sender: number, msg_kind: number, msg_contents: string) {
+    if (msg_kind == MSG_PLAYER_WIN_ROUND) {
+        basic.showString("W:+" + msg_contents)
+    }
     if (msg_kind == MSG_PLAYER_LOSE_GAME) {
         console.log("player lossed")
         game_over = true
@@ -407,8 +416,8 @@ function next_round() {
     highest_bet = 0
     console.log("next round index: " + round_index)
     if (players.length - players_folded.length == 1) {
-        //pay_winner()
-        //round_index = 0
+        pay_winner()
+        round_index = 0
     }
     if (round_index == 0) {
         console.log("round 0")
@@ -508,6 +517,7 @@ let _player_id = 0
 let MSG_PLAYER_LOSE_GAME = 0
 let MSG_PLAYER_JOIN_CONFIRM = 0
 let MSG_SEARCHING_FOR_PLAYERS = 0
+let MSG_PLAYER_WIN_ROUND = 0
 let MSG_PLAYER_START_TURN = 0
 let GAME_STAGE_FINISHED = 0
 let GAME_STAGE_WAITING_FOR_GAME_TO_START = 0
