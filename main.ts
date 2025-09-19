@@ -1,4 +1,3 @@
-// Unused
 function get_best_hand_score (player_cards: string[]) {
     _all_cards = []
     _best_hand = []
@@ -14,7 +13,6 @@ function get_best_hand_score (player_cards: string[]) {
     }
     _all_cards.push(player_cards[0])
     _all_cards.push(player_cards[1])
-    // Pick 5 distinct indices i<j<k<l<m
     for (let p = 0; p <= _all_cards.length - 4 - 1; p++) {
         for (let q = 0; q <= _all_cards.length - 3 - 1; q++) {
             if (q < p + 1) {
@@ -32,7 +30,6 @@ function get_best_hand_score (player_cards: string[]) {
                         if (t < s + 1) {
                             t = s + 1
                         }
-                        // Build one hand
                         hand = [
                         _all_cards[p],
                         _all_cards[q],
@@ -40,7 +37,6 @@ function get_best_hand_score (player_cards: string[]) {
                         _all_cards[s],
                         _all_cards[t]
                         ]
-                        // Evaluate it
                         score2 = checkHand(hand)
                         if (score2 > _best_score) {
                             _best_score = score2
@@ -164,7 +160,6 @@ function show_board_cards () {
     }
 }
 radio.onReceivedString(function (msg) {
-    // Dealer receives join requests while finding players
     _reciever = get_message_reciever(msg)
     _sender = radio.receivedPacket(RadioPacketProperty.SerialNumber)
     _kind = get_message_kind(msg)
@@ -242,7 +237,6 @@ function add_player (player_id: number) {
     player_cards.push([])
 }
 function call_bet_raise () {
-    // we use the same function for calling, betting and raising
     game_stage = GAME_STAGE_PLAYING
     send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "" + bet + "")
     money += 0 - bet
@@ -267,7 +261,6 @@ function init_constants () {
     MSG_PLAYER_LOSE_GAME = 7
     MSG_PLAYER_WIN_ROUND = 8
     MSG_PLAYER_ROUND_OVER = 9
-    // Unused
     MSG_PLAYER_REJOIN = 10
     HAND_HIGH_CARD = 0
     HAND_PAIR = 1
@@ -290,9 +283,7 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
     if (game_stage == GAME_STAGE_PLAYING) {
         if (msg_kind == MSG_PLAYER_FINISH_TURN) {
             _player_id = radio.receivedPacket(RadioPacketProperty.SerialNumber)
-            // subtract bet cost from player money
             _player_index = get_player_index(_player_id)
-            // Wrong player sent bet
             if (_player_index != current_player) {
                 return
             }
@@ -342,7 +333,6 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
                 }
                 _should_keep_checking = false
             }
-            // calculate winner here
             if (players_left_to_call > 0) {
                 send_message(players[current_player], MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
@@ -386,8 +376,9 @@ function pay_winner () {
             }
         }
     }
-    // exclude folded players
     players_folded = []
+    board_cards = []
+    board_cards_string = "-"
     player_money[_winner] = player_money[_winner] + pot
     send_message(players[_winner], MSG_PLAYER_WIN_ROUND, "" + player_money[_winner])
     pot = 0
@@ -403,14 +394,13 @@ function pay_winner () {
             send_message(players[index22], MSG_PLAYER_ROUND_OVER, "" + player_money[index22])
         }
     }
-    board_cards = []
+    led.stopAnimation()
     basic.showString("ROUND OVER")
 }
 input.onButtonPressed(Button.AB, function () {
     led.stopAnimation()
     if (game_stage == GAME_STAGE_FINDING_PLAYERS) {
         if (role == ROLE_DEALER) {
-            // terminate here,idk how to though
             if (players.length == 0) {
             	
             }
@@ -464,6 +454,7 @@ function msg_recieved_player (sender: number, msg_kind: number, msg_contents: st
     if (msg_kind == MSG_PLAYER_ROUND_OVER) {
         led.stopAnimation()
         money = parseInt(msg_contents)
+        led.stopAnimation()
         basic.showString("ROUND OVER: " + msg_contents)
     }
     if (msg_kind == MSG_PLAYER_LOSE_GAME) {
@@ -583,27 +574,27 @@ function next_round () {
     }
     highest_bet = 0
     if (players.length - players_folded.length == 1) {
-        pay_winner()
         round_index = 0
-    }
-    if (round_index == 0) {
-        deal_cards()
-        round_index += 1
-    } else if (round_index == 1) {
-        add_board_cards(3)
-        round_index += 1
-    } else if (round_index == 2) {
-        add_board_cards(1)
-        round_index += 1
-    } else if (round_index == 3) {
-        add_board_cards(1)
-        round_index += 1
+        pay_winner()
     } else {
-        // pay out jackpot
-        round_index = 0
-        pay_winner()
-        if (players.length == 1) {
-        	
+        if (round_index == 0) {
+            deal_cards()
+            round_index += 1
+        } else if (round_index == 1) {
+            add_board_cards(3)
+            round_index += 1
+        } else if (round_index == 2) {
+            add_board_cards(1)
+            round_index += 1
+        } else if (round_index == 3) {
+            add_board_cards(1)
+            round_index += 1
+        } else {
+            round_index = 0
+            pay_winner()
+            if (players.length == 1) {
+                
+            }
         }
     }
     show_board_cards()
