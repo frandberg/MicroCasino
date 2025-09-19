@@ -60,10 +60,12 @@ function scramble_cards () {
         scrambled_cards.push(_value)
     }
 }
-function fold () {
-    send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "-1")
+function fold() {
     game_stage = GAME_STAGE_PLAYING
-    basic.showString("FOLD")
+    send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "-1")
+    if (game_stage == GAME_STAGE_PLAYING) {
+        basic.showString("FOLD")
+    }
 }
 function init_list_values () {
     suits = [
@@ -814,14 +816,14 @@ basic.forever(function () {
                 if (player_display_mode == "bet") {
                     basic.showNumber(bet)
                 } else if (player_display_mode == "cards" && my_cards.length == 2) {
-                    if (my_cards == []){
-                        basic.showString("-")
-                    } else {
-                        basic.showString("" + my_cards[0] + my_cards[1])
-                    }
+                    basic.showString("" + my_cards[0] + my_cards[1])
+                } else if (player_display_mode == "cards" && my_cards.length == 0) {
+                    basic.showString("-")
                 }
             } else if (game_stage == GAME_STAGE_PLAYING && my_cards.length == 2) {
                 basic.showString("" + my_cards[0] + my_cards[1])
+            } else if (game_stage == GAME_STAGE_PLAYING && my_cards.length == 0) {
+                basic.showString("-")
             }
         } else {
             led.stopAnimation()
