@@ -60,7 +60,7 @@ function scramble_cards () {
         scrambled_cards.push(_value)
     }
 }
-function fold() {
+function fold () {
     game_stage = GAME_STAGE_PLAYING
     send_message(dealer_id, MSG_PLAYER_FINISH_TURN, "-1")
     if (game_stage == GAME_STAGE_PLAYING) {
@@ -293,7 +293,7 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
             if (_bet == -1) {
                 players_folded.push(_player_id)
                 players_left_to_call = players_left_to_call - 1
-                if(players.length - players_folded.length == 1){
+                if (players.length - players_folded.length == 1) {
                     next_round()
                     return
                 }
@@ -358,8 +358,8 @@ function pay_winner () {
     if (players.length - players_folded.length <= 1) {
         for (let _a = 0; _a <= players.length - 1; _a++) {
             _is_winner = true
-            for (let index = 0; index < players_folded.length; index++) {
-                if (players[_a] == players_folded[index]){
+            for (let index2 = 0; index2 <= players_folded.length - 1; index2++) {
+                if (players[_a] == players_folded[index2]) {
                     _is_winner = false
                     break;
                 }
@@ -673,7 +673,6 @@ let row2 = 0
 let spare_card2 = ""
 let spare_value2 = 0
 let h = 0
-let round_index = 0
 let _should_keep_checking2 = false
 let _display_char = ""
 let result2 = 0
@@ -684,13 +683,14 @@ let flush2 = false
 let value2 = ""
 let hand_values: number[] = []
 let my_cards: string[] = []
-let game_over = false
 let _card = ""
+let game_over = false
 let score = 0
 let player_folded = false
 let _winner = 0
 let _is_winner = false
 let best_hand_score = 0
+let round_index = 0
 let _has_folded = false
 let _should_keep_checking = false
 let pot = 0
@@ -751,9 +751,9 @@ let _delimeters_found_contents = 0
 let card_values: number[] = []
 let card_values_alpha: string[] = []
 let suits: string[] = []
-let GAME_STAGE_PLAYING = 0
 let MSG_PLAYER_FINISH_TURN = 0
 let dealer_id = 0
+let GAME_STAGE_PLAYING = 0
 let _value = ""
 let _rand = 0
 let cards: string[] = []
@@ -772,27 +772,27 @@ let money = 0
 let dealer_display_mode = ""
 let board_cards_string = ""
 let player_display_mode = ""
-let _combinations: number[] = []
-let has_folded = false
-let same_suits = false
-let index23 = 0
-let result = ""
-let combos: number[] = []
-let card_groups: number[] = []
-let searching_for_players = 0
-let _message2 = ""
-let _card_1 = ""
-let _card_2 = ""
-let value = ""
-let flush = false
-let v_result = 0
-let straight = 0
-let g = 0
-let spare_value = 0
-let spare_card = 0
-let next = 0
-let current = 0
 let row = 0
+let current = 0
+let next = 0
+let spare_card = 0
+let spare_value = 0
+let g = 0
+let straight = 0
+let v_result = 0
+let flush = false
+let value = ""
+let _card_2 = ""
+let _card_1 = ""
+let _message2 = ""
+let searching_for_players = 0
+let card_groups: number[] = []
+let combos: number[] = []
+let result = ""
+let index23 = 0
+let same_suits = false
+let has_folded = false
+let _combinations: number[] = []
 player_display_mode = "cards"
 board_cards_string = "-"
 dealer_display_mode = "cards"
