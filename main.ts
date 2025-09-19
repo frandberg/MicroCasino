@@ -800,7 +800,7 @@ money = 20
 serial_number = control.deviceSerialNumber()
 radio.setTransmitSerialNumber(true)
 init_constants()
-let radio_group_number = 68
+let radio_group_number = 168
 radio.setGroup(radio_group_number)
 game_stage = GAME_STAGE_ROLE_SELECTION
 init_list_values()
