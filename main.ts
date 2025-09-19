@@ -1,6 +1,4 @@
-/**
- * Unused
- */
+// Unused
 function get_best_hand_score (player_cards: string[]) {
     _all_cards = []
     _best_hand = []
@@ -18,19 +16,32 @@ function get_best_hand_score (player_cards: string[]) {
     _all_cards.push(player_cards[1])
     // Pick 5 distinct indices i<j<k<l<m
     for (let p = 0; p <= _all_cards.length - 4 - 1; p++) {
-        for (let q = p + 1; q < _all_cards.length - 3; q++) {
-            for (let r = q + 1; r < _all_cards.length - 2; r++) {
-                for (let s = r + 1; s < _all_cards.length - 1; s++) {
-                    for (let t = s + 1; t < _all_cards.length; t++) {
-
+        for (let q = 0; q <= _all_cards.length - 3 - 1; q++) {
+            if (q < p + 1) {
+                q = p + 1
+            }
+            for (let r = 0; r <= _all_cards.length - 2 - 1; r++) {
+                if (r < q + 1) {
+                    r = q + 1
+                }
+                for (let s = 0; s <= _all_cards.length - 1 - 1; s++) {
+                    if (s < r + 1) {
+                        s = r + 1
+                    }
+                    for (let t = 0; t <= _all_cards.length - 1; t++) {
+                        if (t < s + 1) {
+                            t = s + 1
+                        }
                         // Build one hand
-                        let hand: string[] = [
-                            _all_cards[p], _all_cards[q], _all_cards[r], _all_cards[s], _all_cards[t]
+                        hand = [
+                        _all_cards[p],
+                        _all_cards[q],
+                        _all_cards[r],
+                        _all_cards[s],
+                        _all_cards[t]
                         ]
                         // Evaluate it
-                        let score2 = checkHand(hand)
-
-
+                        score2 = checkHand(hand)
                         if (score2 > _best_score) {
                             _best_score = score2
                             _best_hand = hand
@@ -40,8 +51,7 @@ function get_best_hand_score (player_cards: string[]) {
             }
         }
     }
-
-return _best_score
+    return _best_score
 }
 function scramble_cards () {
     scrambled_cards = []
@@ -114,8 +124,7 @@ function send_message (reciever: number, kind: number, contents: string) {
     _message = "" + reciever + "|" + kind + "|" + contents
     if (_message.length > 19) {
         led.stopAnimation()
-        
-basic.showString("E: " + _message)
+        basic.showString("E: " + _message)
     }
     radio.sendString(_message)
 }
@@ -190,7 +199,7 @@ function get_player_index (player_id: number) {
     return -1
 }
 function start_game () {
-game_stage = GAME_STAGE_PLAYING
+    game_stage = GAME_STAGE_PLAYING
     send_message(0, MSG_START_GAME, "")
     led.stopAnimation()
     next_round()
@@ -291,8 +300,7 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
             if (_bet == -1) {
                 players_folded.push(_player_id)
                 players_left_to_call = players_left_to_call - 1
-            }
-            else{
+            } else {
                 _new_bet = _bet
                 for (let _index = 0; _index <= already_paid_players.length - 1; _index++) {
                     if (_player_index == already_paid_players[_index]) {
@@ -315,9 +323,7 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
                     players_left_to_call = players_left_to_call - 1
                 }
             }
-            
-            let _should_keep_checking = true
-            let _has_folded = false
+            _should_keep_checking = true
             while (_should_keep_checking) {
                 _has_folded = false
                 if (current_player == players.length - 1) {
@@ -325,22 +331,20 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
                 } else {
                     current_player += 1
                 }
-                for (let _s = 0; _s < players_folded.length; _s++){
-                    if (players[current_player] == players_folded[_s]){
+                for (let _s = 0; _s <= players_folded.length - 1; _s++) {
+                    if (players[current_player] == players_folded[_s]) {
                         _has_folded = true
-                        break
+                        break;
                     }
                 }
                 if (_has_folded) {
-                    continue
+                    continue;
                 }
                 _should_keep_checking = false
-            }           
-
+            }
             // calculate winner here
             if (players_left_to_call > 0) {
-                
-send_message(players[current_player], MSG_PLAYER_START_TURN, "" + highest_bet)
+                send_message(players[current_player], MSG_PLAYER_START_TURN, "" + highest_bet)
             } else {
                 next_round()
             }
@@ -354,20 +358,18 @@ input.onGesture(Gesture.ScreenDown, function () {
 })
 function pay_winner () {
     best_hand_score = -1
-
-    if (players.length - players_folded.length <= 1){
-        for (let _a = 0; _a < players.length; _a++) {
-            let _is_winner = true
-            for (let _w = 0; _w < players_folded.length; _w++){
+    if (players.length - players_folded.length <= 1) {
+        for (let _a = 0; _a <= players.length - 1; _a++) {
+            _is_winner = true
+            for (let index = 0; index < players_folded.length; index++) {
                 _is_winner = false
-                break
+                break;
             }
-            if (_is_winner){
+            if (_is_winner) {
                 _winner = _a
             }
         }
-    }
-    else{
+    } else {
         for (let i = 0; i <= players.length - 1; i++) {
             for (let j = 0; j <= players_folded.length - 1; j++) {
                 if (players_folded[j] == players[i]) {
@@ -386,12 +388,12 @@ function pay_winner () {
     }
     // exclude folded players
     players_folded = []
-player_money[_winner] = player_money[_winner] + pot
-send_message(players[_winner], MSG_PLAYER_WIN_ROUND, "" + player_money[_winner])
+    player_money[_winner] = player_money[_winner] + pot
+    send_message(players[_winner], MSG_PLAYER_WIN_ROUND, "" + player_money[_winner])
     pot = 0
     for (let index22 = 0; index22 <= players.length - 1; index22++) {
         if (player_money[index22] == 0) {
-send_message(players[index22], MSG_PLAYER_LOSE_GAME, "")
+            send_message(players[index22], MSG_PLAYER_LOSE_GAME, "")
             players.removeAt(index22)
             player_money.removeAt(index22)
         } else {
@@ -401,7 +403,7 @@ send_message(players[index22], MSG_PLAYER_LOSE_GAME, "")
             send_message(players[index22], MSG_PLAYER_ROUND_OVER, "" + player_money[index22])
         }
     }
-board_cards = []
+    board_cards = []
     basic.showString("ROUND OVER")
 }
 input.onButtonPressed(Button.AB, function () {
@@ -465,13 +467,13 @@ function msg_recieved_player (sender: number, msg_kind: number, msg_contents: st
         basic.showString("ROUND OVER: " + msg_contents)
     }
     if (msg_kind == MSG_PLAYER_LOSE_GAME) {
-game_over = true
+        game_over = true
         return
     }
     if (game_stage == GAME_STAGE_FINDING_PLAYERS && msg_kind == MSG_JOIN_GAME_PING) {
         game_stage = GAME_STAGE_WAITING_FOR_GAME_TO_START
         dealer_id = sender
-send_message(0, MSG_PLAYER_JOIN_CONFIRM, "")
+        send_message(0, MSG_PLAYER_JOIN_CONFIRM, "")
     } else if (msg_kind == MSG_START_GAME && game_stage == GAME_STAGE_WAITING_FOR_GAME_TO_START) {
         game_stage = GAME_STAGE_PLAYING
     } else if (msg_kind == MSG_PLAYER_START_TURN) {
@@ -566,31 +568,29 @@ function next_round () {
     already_paid_money = []
     already_paid_players = []
     current_player = 0
-    let _should_keep_checking = true
-    while (_should_keep_checking) {
-
+    _should_keep_checking2 = true
+    while (_should_keep_checking2) {
         if (current_player > players.length) {
             break;
         }
-        for (let _s = 0; _s < players_folded.length; _s++) {
-            if (players[current_player] == players_folded[_s]) {
+        for (let _s2 = 0; _s2 <= players_folded.length - 1; _s2++) {
+            if (players[current_player] == players_folded[_s2]) {
                 current_player += 1
                 continue;
             }
         }
-        
-        _should_keep_checking = false
+        _should_keep_checking2 = false
     }
     highest_bet = 0
-if (players.length - players_folded.length == 1) {
+    if (players.length - players_folded.length == 1) {
         pay_winner()
         round_index = 0
     }
     if (round_index == 0) {
-deal_cards()
+        deal_cards()
         round_index += 1
     } else if (round_index == 1) {
-add_board_cards(3)
+        add_board_cards(3)
         round_index += 1
     } else if (round_index == 2) {
         add_board_cards(1)
@@ -631,7 +631,7 @@ function orderValues (values_array: number[]) {
     h = 1
     for (let n = 0; n <= values_array.length - 1; n++) {
         next2 = values_array[n + 1]
-        if (next2 != undefined) {
+        if (n + 1 < values_array.length) {
             if (values_array[n] == next2 + 1) {
                 current2 += 1
                 if (current2 > row2) {
@@ -666,36 +666,45 @@ function orderValues (values_array: number[]) {
         return card_groups2
     }
 }
-
-
-let current2 = 0
 let next2 = 0
+let current2 = 0
 let row2 = 0
 let spare_card2 = ""
 let spare_value2 = 0
 let h = 0
+let round_index = 0
+let _should_keep_checking2 = false
 let _display_char = ""
 let result2 = 0
+let v_result2: number[] = []
 let straight2 = 0
 let global_hand_array: string[] = []
 let flush2 = false
 let value2 = ""
+let hand_values: number[] = []
 let my_cards: string[] = []
 let game_over = false
-let _winner = 0
+let _card = ""
 let score = 0
 let player_folded = false
+let _winner = 0
+let _is_winner = false
 let best_hand_score = 0
+let _has_folded = false
+let _should_keep_checking = false
 let pot = 0
 let already_paid_money: number[] = []
 let _player_has_paid = false
 let already_paid_players: number[] = []
 let _new_bet = 0
+let players_left_to_call = 0
 let players_folded: number[] = []
 let _bet = 0
+let current_player = 0
 let _player_index = 0
 let _player_id = 0
 let HAND_STRAIGHT_FLUSH = 0
+let HAND_FOUR_OF_A_KIND = 0
 let HAND_FULL_HOUSE = 0
 let HAND_FLUSH = 0
 let HAND_STRAIGHT = 0
@@ -712,12 +721,14 @@ let MSG_SEARCHING_FOR_PLAYERS = 0
 let MSG_PLAYER_START_TURN = 0
 let GAME_STAGE_FINISHED = 0
 let GAME_STAGE_WAITING_FOR_GAME_TO_START = 0
+let player_money: number[] = []
 let o = 0
 let highest_bet = 0
 let bet = 0
 let MSG_START_GAME = 0
 let MSG_GIVE_HAND = 0
 let player_cards: string[][] = []
+let players: number[] = []
 let ROLE_PLAYER = 0
 let _contents = ""
 let _kind = 0
@@ -732,6 +743,7 @@ let MSG_JOIN_GAME_PING = 0
 let GAME_STAGE_FINDING_PLAYERS = 0
 let ROLE_DEALER = 0
 let GAME_STAGE_MY_TURN = 0
+let _message = ""
 let _last_delimeter_index = 0
 let _delimeters_found_kind = 0
 let _delimeters_found_contents = 0
@@ -746,48 +758,40 @@ let _rand = 0
 let cards: string[] = []
 let _temp_cards: string[] = []
 let scrambled_cards: string[] = []
-let HAND_FOUR_OF_A_KIND = 0
+let score2 = 0
+let hand: string[] = []
+let board_cards: string[] = []
+let _best_score = 0
+let _best_hand: string[] = []
+let _all_cards: string[] = []
 let GAME_STAGE_ROLE_SELECTION = 0
+let game_stage = 0
 let serial_number = 0
 let money = 0
 let dealer_display_mode = ""
 let board_cards_string = ""
 let player_display_mode = ""
-let v_result2: number[] = []
-let current_player = 0
-let row = 0
-let current = 0
-let next = 0
-let spare_card = 0
-let spare_value = 0
-let g = 0
-let straight = 0
-let v_result = 0
-let flush = false
-let value = ""
-let _card = ""
-let _card_2 = ""
-let _card_1 = ""
-let board_cards: string[] = []
-let _message2 = ""
-let searching_for_players = 0
-let round_index = 0
-let card_groups: number[] = []
-let combos: number[] = []
-let result = ""
-let game_stage = 0
-let _message = ""
-let players: number[] = []
-let player_money: number[] = []
-let players_left_to_call = 0
-let index23 = 0
-let same_suits = false
-let has_folded = false
-let _best_hand: string[] = []
-let _best_score = 0
 let _combinations: number[] = []
-let _all_cards: string[] = []
-let hand_values: number[] = []
+let has_folded = false
+let same_suits = false
+let index23 = 0
+let result = ""
+let combos: number[] = []
+let card_groups: number[] = []
+let searching_for_players = 0
+let _message2 = ""
+let _card_1 = ""
+let _card_2 = ""
+let value = ""
+let flush = false
+let v_result = 0
+let straight = 0
+let g = 0
+let spare_value = 0
+let spare_card = 0
+let next = 0
+let current = 0
+let row = 0
 player_display_mode = "cards"
 board_cards_string = "-"
 dealer_display_mode = "cards"
@@ -801,8 +805,6 @@ game_stage = GAME_STAGE_ROLE_SELECTION
 init_list_values()
 build_card_list()
 scramble_cards()
-
-
 while (game_stage == GAME_STAGE_ROLE_SELECTION) {
     basic.showString("A=DEALER:B=PLAYER")
 }
