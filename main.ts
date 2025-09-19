@@ -401,6 +401,7 @@ function pay_winner () {
             send_message(players[index22], MSG_PLAYER_ROUND_OVER, "" + player_money[index22])
         }
     }
+    game_over = true
     led.stopAnimation()
     basic.showString("ROUND OVER")
 }
@@ -463,7 +464,6 @@ function msg_recieved_player (sender: number, msg_kind: number, msg_contents: st
     if (msg_kind == MSG_PLAYER_ROUND_OVER) {
         led.stopAnimation()
         money = parseInt(msg_contents)
-        led.stopAnimation()
         my_cards = []
         game_stage = GAME_STAGE_PLAYING
         basic.showString("ROUND OVER: " + msg_contents)
@@ -586,6 +586,7 @@ function next_round () {
     highest_bet = 0
     if (players.length - players_folded.length == 1) {
         pay_winner()
+        return
     } else {
         if (round_index == 0) {
             deal_cards()
@@ -601,6 +602,7 @@ function next_round () {
             round_index += 1
         } else {
             pay_winner()
+            return
         }
     }
     show_board_cards()
@@ -812,7 +814,11 @@ basic.forever(function () {
                 if (player_display_mode == "bet") {
                     basic.showNumber(bet)
                 } else if (player_display_mode == "cards" && my_cards.length == 2) {
-                    basic.showString("" + my_cards[0] + my_cards[1])
+                    if (my_cards == []){
+                        basic.showString("-")
+                    } else {
+                        basic.showString("" + my_cards[0] + my_cards[1])
+                    }
                 }
             } else if (game_stage == GAME_STAGE_PLAYING && my_cards.length == 2) {
                 basic.showString("" + my_cards[0] + my_cards[1])
@@ -822,6 +828,11 @@ basic.forever(function () {
             basic.showString("L")
         }
     } else if (role == ROLE_DEALER) {
+        if (game_over) {
+            basic.pause(10000)
+            game_over = false
+            next_round()
+        }
         if (game_stage == GAME_STAGE_PLAYING) {
             if (dealer_display_mode == "cards") {
                 basic.showString(board_cards_string)
