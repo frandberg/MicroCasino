@@ -291,6 +291,10 @@ function msg_recieved_dealer (sender: number, msg_kind: number, msg_contents: st
             if (_bet == -1) {
                 players_folded.push(_player_id)
                 players_left_to_call = players_left_to_call - 1
+                if(players.length - players_folded.length == 1){
+                    next_round()
+                    return
+                }
             } else {
                 _new_bet = _bet
                 for (let _index = 0; _index <= already_paid_players.length - 1; _index++) {
@@ -347,13 +351,16 @@ input.onGesture(Gesture.ScreenDown, function () {
     }
 })
 function pay_winner () {
+    round_index = 0
     best_hand_score = -1
     if (players.length - players_folded.length <= 1) {
         for (let _a = 0; _a <= players.length - 1; _a++) {
             _is_winner = true
             for (let index = 0; index < players_folded.length; index++) {
-                _is_winner = false
-                break;
+                if (players[_a] == players_folded[index]){
+                    _is_winner = false
+                    break;
+                }
             }
             if (_is_winner) {
                 _winner = _a
@@ -449,12 +456,16 @@ function msg_recieved_player (sender: number, msg_kind: number, msg_contents: st
     if (msg_kind == MSG_PLAYER_WIN_ROUND) {
         led.stopAnimation()
         money = parseInt(msg_contents)
+        my_cards = []
+        game_stage = GAME_STAGE_PLAYING
         basic.showString("W TOT:" + msg_contents)
     }
     if (msg_kind == MSG_PLAYER_ROUND_OVER) {
         led.stopAnimation()
         money = parseInt(msg_contents)
         led.stopAnimation()
+        my_cards = []
+        game_stage = GAME_STAGE_PLAYING
         basic.showString("ROUND OVER: " + msg_contents)
     }
     if (msg_kind == MSG_PLAYER_LOSE_GAME) {
@@ -574,7 +585,6 @@ function next_round () {
     }
     highest_bet = 0
     if (players.length - players_folded.length == 1) {
-        round_index = 0
         pay_winner()
     } else {
         if (round_index == 0) {
@@ -590,11 +600,7 @@ function next_round () {
             add_board_cards(1)
             round_index += 1
         } else {
-            round_index = 0
             pay_winner()
-            if (players.length == 1) {
-                
-            }
         }
     }
     show_board_cards()
